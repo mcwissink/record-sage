@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useRecords, Setup, Login } from './use-records';
 import { RecordEntry } from './RecordEntry';
 import './App.css';
+import { ManageRecords } from './ManageRecords';
 
 const App: React.FC = () => {
     const {
@@ -9,6 +10,8 @@ const App: React.FC = () => {
         isInitialized,
         isAuthenticated,
         isConnected,
+        disconnect,
+        logout
     } = useRecords();
 
     useEffect(() => {
@@ -19,9 +22,18 @@ const App: React.FC = () => {
         <div className="App">
             {isInitialized ? (
                 isAuthenticated ? (
-                    isConnected ? (
-                        <RecordEntry />
-                    ) : <Setup />
+                    <>
+                        <button onClick={disconnect}>Disconnect</button>
+                        <button onClick={logout}>Logout</button>
+                        <hr />
+                        {isConnected ? (
+                            <>
+                                <RecordEntry />
+                                <hr />
+                                <ManageRecords />
+                            </>
+                        ) : <Setup />}
+                    </>
                 ) : <Login />
             ) : <div>Loading...</div>}
         </div>

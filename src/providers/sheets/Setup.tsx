@@ -3,12 +3,11 @@ import { useRecords } from '../../use-records';
 import { schema } from '../../schema';
 
 export const Setup: React.VFC = () => {
-    const { connect, logout } = useRecords();
+    const { connect } = useRecords();
     const [spreadsheetId, setSpreadsheetId] = useState('');
 
     return (
         <>
-            <button onClick={logout}>Logout</button>
             <div>Link to an existing spreadsheet</div>
             <form onSubmit={e => {
                 e.preventDefault();

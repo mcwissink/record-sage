@@ -13,4 +13,8 @@ export const schema: Schema = [
         table: 'Field',
         columns: ['id', 'name']
     },
+    {
+        table: 'Crop',
+        columns: ['id', 'name']
+    },
 ];
