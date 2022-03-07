@@ -1,8 +1,9 @@
 import { RecordsProvider, Schema, SetupOptions } from '../../records';
+import { v4 as uuid } from 'uuid';
 
 export class SheetsProvider extends RecordsProvider {
     constructor(
-        private api = gapi,
+        private api: any = gapi,
         private initialized?: Promise<void>,
     ) {
         super();
@@ -96,20 +97,17 @@ export class SheetsProvider extends RecordsProvider {
 
     async connect(options: SetupOptions<{ spreadsheetId: string }>) {
         if ('spreadsheetId' in options) {
-            await (this.api.client as any).sheets.spreadsheets.get({
+            await this.api.client.sheets.spreadsheets.get({
                 spreadsheetId: options.spreadsheetId
             });
             this.setSpreadsheetId(options.spreadsheetId);
         } else {
             this.setSchema(options.schema);
             const schema = options.schema.concat([{
-                table: 'SheetsTableData',
-                columns: ['table', 'count', 'sync'],
-                rows: options.schema.map(({ table, rows }) => ([
-                    table, rows?.length ?? 0, 'full'
-                ])),
+                table: 'Query',
+                columns: [''],
             }]);
-            const { body } = await (this.api.client as any).sheets.spreadsheets.create({
+            const { body } = await this.api.client.sheets.spreadsheets.create({
                 properties: {
                     title: `Record Sage - ${new Date().toLocaleString()}`
                 },
@@ -157,23 +155,46 @@ export class SheetsProvider extends RecordsProvider {
             valueInputOption: 'USER_ENTERED',
             insertDataOption: 'INSERT_ROWS',
             range: `${table}!${start}:${end}`,
-            values: [row],
+            values: [[uuid()].concat(row)],
         });
     }
 
     private getRowCount = async (table: string) => {
-        try {
-            const { body } = await (this.api.client as any).sheets.spreadsheets.get({
+        const { body } = await this.api.client.sheets.spreadsheets.get({
 
-                spreadsheetId: this.getSpreadsheetId(),
-            });
-            const { sheets } = JSON.parse(body);
-            const { properties } = sheets.find((sheet: any) => sheet.properties.title === table);
-            // Subtract 1 to account for header row
-            return properties.gridProperties.rowCount - 1;
-        } catch (error) {
-            throw error;
-        }
+            spreadsheetId: this.getSpreadsheetId(),
+        });
+        const { sheets } = JSON.parse(body);
+        const { properties } = sheets.find((sheet: any) => sheet.properties.title === table);
+        // Subtract 1 to account for header row
+        return properties.gridProperties.rowCount - 1;
+    }
+
+    private getSheetId = async (table: string): Promise<string> => {
+        const { body } = await this.api.client.sheets.spreadsheets.get({
+
+            spreadsheetId: this.getSpreadsheetId(),
+        });
+        const { sheets } = JSON.parse(body);
+        const { properties } = sheets.find((sheet: any) => sheet.properties.title === table);
+        return properties.sheetId;
+    }
+
+    private getIndexById = async (table: string, id: string): Promise<number> => {
+        const rowCount = await this.getRowCount(table);
+        const start = this.getA1Notation(0, 0);
+        const end = this.getA1Notation(0, 0);
+        const queryStart = this.getA1Notation(1, 0);
+        const queryEnd = this.getA1Notation(1 + rowCount, 0);
+        const { body } = await this.api.client.sheets.spreadsheets.values.update({
+            spreadsheetId: this.getSpreadsheetId(),
+            valueInputOption: 'USER_ENTERED',
+            range: `Query!${start}:${end}`,
+            values: [[`=MATCH("${id}", ${table}!${queryStart}:${queryEnd}, 0)`]],
+            includeValuesInResponse: true,
+        });
+        const { updatedData } = JSON.parse(body);
+        return Number(updatedData.values[0][0]);
     }
 
     get = async (table: string): Promise<string[][]> => {
@@ -182,7 +203,7 @@ export class SheetsProvider extends RecordsProvider {
             const start = this.getA1Notation(1, 0);
             const end = this.getA1Notation(1 + rowCount, this.schema(table).columns.length - 1);
 
-            const { body } = await (this.api.client as any).sheets.spreadsheets.values.get({
+            const { body } = await this.api.client.sheets.spreadsheets.values.get({
 
                 spreadsheetId: this.getSpreadsheetId(),
                 range: `${table}!${start}:${end}`,
@@ -192,5 +213,24 @@ export class SheetsProvider extends RecordsProvider {
         } else {
             return [];
         }
+    }
+
+    delete = async (table: string, id: string) => {
+        const rowIndex = await this.getIndexById(table, id);
+        await this.api.client.sheets.spreadsheets.batchUpdate({
+            spreadsheetId: this.getSpreadsheetId(),
+            requests: [
+                {
+                    deleteDimension: {
+                        range: {
+                            sheetId: await this.getSheetId(table),
+                            dimension: 'ROWS',
+                            startIndex: rowIndex,
+                            endIndex: rowIndex + 1,
+                        }
+                    }
+                }
+            ]
+        });
     }
 }

@@ -24,6 +24,10 @@ export const RecordEntry: React.VFC = () => {
         records.get(table).then(setRows);
     };
 
+    const onDelete = (id: string) => async () => {
+        await records.delete(table, id);
+    };
+
     return (
         <div>
             <select defaultValue={'empty'} onChange={e => setTable(e.target.value)}>
@@ -36,12 +40,13 @@ export const RecordEntry: React.VFC = () => {
             <br />
             {rows.map((row, i) => (
                 <div key={i}>
-                    {row.map((cell, j) => <span key={j}>{cell}</span>)}
+                    {row.map((cell, j) => <span key={j}>{cell} </span>)}
+                    <button onClick={onDelete(row[0])}>Delete</button>
                 </div>
             ))}
             <br />
             <form onSubmit={onSubmit}>
-                <input onChange={e => setInsert(e.target.value)} />
+                <input value={insert} onChange={e => setInsert(e.target.value)} />
                 <button>Submit</button>
             </form>
             <br />

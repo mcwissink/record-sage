@@ -59,6 +59,10 @@ export class Records {
     get = async (table: string) => {
         return await this.provider.get(table);
     }
+
+    delete = async (table: string, id: string) => {
+        return await this.provider.delete(table, id);
+    }
 }
 
 export type SetupOptions<T extends Record<string, any> = Record<string, any>> = {
@@ -92,6 +96,12 @@ export class RecordsProvider {
     }
     async get(_table: string): Promise<any> {
         throw new Error(`'get' is not implemented`);
+    }
+    async update(_table: string): Promise<any> {
+        throw new Error(`'update' is not implemented`);
+    }
+    async delete(_table: string, _id: string): Promise<any> {
+        throw new Error(`'delete' is not implemented`);
     }
 }
 
