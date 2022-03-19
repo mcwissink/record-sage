@@ -1,4 +1,6 @@
 import React from 'react';
+import { v4 as uuid } from 'uuid';
+import { Cache } from './cache';
 
 export type Schema = Array<{
     table: string;
@@ -12,17 +14,50 @@ export type Provider = {
     Setup: React.VFC;
 }
 
+export const getTableMetadata = (schema: Schema, table: string) => {
+    const metadata = schema.find(({ table: key }) => key === table);
+    if (!metadata) {
+        throw new Error('table not in schema')
+    }
+    return metadata;
+}
+
 export class Records {
+    private static SCHEMA_KEY = 'schema';
     public Setup: React.VFC;
     public Login: React.VFC;
     private provider: RecordsProvider;
+    private cache: Cache;
+    private _schema?: Schema;
     constructor(
         { RecordsProvider, Login, Setup }: Provider,
     ) {
         this.Setup = Setup;
         this.Login = Login;
         this.provider = RecordsProvider;
+        this.cache = new Cache();
+        if (this.isSetup()) {
+            this.cache.connect(this.schema);
+            this.provider.connect(this.schema);
+        }
     }
+
+    get schema() {
+        if (!this._schema) {
+            const schema = localStorage.getItem(Records.SCHEMA_KEY)
+            if (!schema) {
+                throw new Error('Missing schema');
+            }
+            this._schema = JSON.parse(schema) as Schema;
+        }
+        return this._schema;
+    }
+
+    set schema(schema: Schema) {
+        localStorage.setItem(Records.SCHEMA_KEY, JSON.stringify(schema));
+    }
+
+    isSetup = () => localStorage.getItem(Records.SCHEMA_KEY);
 
     isAuthenticated = async () => {
         return await this.provider.isAuthenticated();
@@ -32,11 +67,18 @@ export class Records {
         return await this.provider.isConnected();
     }
 
-    connect = async (options: SetupOptions) => {
-        return await this.provider.connect(options);
+    connect = async (options: RecordsSetupOptions) => {
+        if (options.schema) {
+            this.schema = options.schema;
+        }
+        const schema = options.schema || this.schema;
+
+        await this.cache.setup(schema);
+        return await this.provider.setup({ ...options, schema });
     }
 
     disconnect = async () => {
+        localStorage.removeItem(Records.SCHEMA_KEY);
         return await this.provider.disconnect();
     }
 
@@ -48,30 +90,49 @@ export class Records {
         return await this.provider.logout();
     }
 
-    schema = (table: string) => {
-        return this.provider.schema(table);
-    }
-
     insert = async (table: string, row: Array<string>) => {
-        return await this.provider.insert(table, row);
+        const rowWithId = [this.generateId()].concat(row);
+        // await this.cache.insert(table, rowWithId);
+        return await this.provider.insert(table, rowWithId);
     }
 
     get = async (table: string) => {
-        return await this.provider.get(table);
+        const cachedData = await this.cache.get(table);
+        return cachedData.map(data => [...data, 'cached']).concat(
+            await this.provider.get(table)
+        );
+    }
+
+    private generateId() {
+        return uuid();
     }
 
     delete = async (table: string, id: string) => {
-        return await this.provider.delete(table, id);
+        await this.cache.delete(table, id);
+        // return await this.provider.delete(table, id);
     }
 }
 
-export type SetupOptions<T extends Record<string, any> = Record<string, any>> = {
+type ProviderSetup = Record<string, any>;
+export type RecordsSetupOptions<T extends ProviderSetup = ProviderSetup> = {
     schema: Schema
-} | T;
+    provider?: never;
+} | {
+    schema?: never;
+    provider: T
+};
+
+export type ProviderSetupOptions<T extends ProviderSetup = ProviderSetup> = {
+    schema: Schema
+    provider?: T;
+};
 
 export class RecordsProvider {
-    async connect(_options: SetupOptions): Promise<void> {
+    async connect(_schema: Schema): Promise<void> {
         throw new Error(`'connect' is not implemented`);
+    }
+    async setup(_options: ProviderSetupOptions): Promise<void> {
+        throw new Error(`'setup' is not implemented`);
     }
     async disconnect(): Promise<void> {
         throw new Error(`'disconnect' is not implemented`);
@@ -87,9 +148,6 @@ export class RecordsProvider {
     }
     async logout() {
         return await this.isAuthenticated();
-    }
-    schema(_table: string) {
-        throw new Error(`'schema' is not implemented`);
     }
     async insert(_table: string, _row: Array<string>) {
         throw new Error(`'insert' is not implemented`);

@@ -1,11 +1,11 @@
-import { RecordsProvider, Schema, SetupOptions } from '../../records';
-import { v4 as uuid } from 'uuid';
+import { RecordsProvider, Schema, ProviderSetupOptions, getTableMetadata } from '../../records';
 
 export class SheetsProvider extends RecordsProvider {
-    constructor(
-        private api: any = gapi,
-        private initialized?: Promise<void>,
-    ) {
+    private initialized?: Promise<void>;
+    private api: any = gapi;
+    private _schema?: Schema;
+    private _spreadsheetId?: string;
+    constructor() {
         super();
         this.initialized = new Promise((resolve, reject) => {
             this.api.load('client:auth2', async () => {
@@ -25,6 +25,21 @@ export class SheetsProvider extends RecordsProvider {
         });
     }
 
+    private ensure<T>(value?: T) {
+        if (!value) {
+            throw new Error('Provider has not been initialized');
+        }
+        return value;
+    }
+
+    get schema() {
+        return this.ensure(this._schema);
+    }
+
+    set schema(schema) {
+        this._schema = schema;
+    }
+
     // https://docs.microsoft.com/en-US/office/troubleshoot/excel/convert-excel-column-numbers
     // Convert zero-based row/column index to A1 notation 
     private static alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -40,26 +55,19 @@ export class SheetsProvider extends RecordsProvider {
         return `${a1Column}${row + 1}`;
     }
 
-    private static spreadsheetSchemaKey = 'spreadsheetSchema';
-    private getSchema(): Schema {
-        const schema = localStorage.getItem(SheetsProvider.spreadsheetSchemaKey)
-        if (schema) {
-            return JSON.parse(schema);
+    private static SPREADSHEET_ID_KEY = 'spreadsheedId';
+    get spreadsheetId() {
+        if (!this._spreadsheetId) {
+            const spreadsheetId = localStorage.getItem(SheetsProvider.SPREADSHEET_ID_KEY);
+            if (!spreadsheetId) {
+                throw new Error('Missing spreadsheet ID');
+            }
+            this._spreadsheetId = spreadsheetId;
         }
-        throw new Error('Failed to load schema');
+        return this._spreadsheetId;
     }
-
-    private setSchema(schema: Schema) {
-        return localStorage.setItem(SheetsProvider.spreadsheetSchemaKey, JSON.stringify(schema));
-    }
-
-    private static spreadsheetIdKey = 'spreadsheedId';
-    private getSpreadsheetId() {
-        return localStorage.getItem(SheetsProvider.spreadsheetIdKey);
-    }
-
-    private setSpreadsheetId(spreadsheetId: string) {
-        localStorage.setItem(SheetsProvider.spreadsheetIdKey, spreadsheetId);
+    set spreadsheetId(spreadsheetId: string) {
+        localStorage.setItem(SheetsProvider.SPREADSHEET_ID_KEY, spreadsheetId);
     }
 
     async isAuthenticated() {
@@ -69,7 +77,7 @@ export class SheetsProvider extends RecordsProvider {
 
     async isConnected() {
         await this.initialized;
-        return Boolean(this.getSpreadsheetId());
+        return Boolean(localStorage.getItem(SheetsProvider.SPREADSHEET_ID_KEY));
     }
 
     async login() {
@@ -83,26 +91,21 @@ export class SheetsProvider extends RecordsProvider {
     }
 
     async disconnect() {
-        localStorage.removeItem(SheetsProvider.spreadsheetIdKey);
+        localStorage.removeItem(SheetsProvider.SPREADSHEET_ID_KEY);
     }
 
-    schema(table: string) {
-        const schema = this.getSchema();
-        const tableSchema = schema.find(({ table: key }) => key === table);
-        if (tableSchema) {
-            return tableSchema;
-        }
-        throw new Error('Table does not exist');
+    async connect(schema: Schema) {
+        this.schema = schema;
     }
 
-    async connect(options: SetupOptions<{ spreadsheetId: string }>) {
-        if ('spreadsheetId' in options) {
+    async setup(options: ProviderSetupOptions<{ spreadsheetId: string }>) {
+        this.schema = options.schema;
+        if (options.provider) {
             await this.api.client.sheets.spreadsheets.get({
-                spreadsheetId: options.spreadsheetId
+                spreadsheetId: options.provider.spreadsheetId
             });
-            this.setSpreadsheetId(options.spreadsheetId);
+            this.spreadsheetId = options.provider.spreadsheetId;
         } else {
-            this.setSchema(options.schema);
             const schema = options.schema.concat([{
                 table: 'Query',
                 columns: [''],
@@ -143,26 +146,26 @@ export class SheetsProvider extends RecordsProvider {
                 })),
             });
             const { spreadsheetId } = JSON.parse(body);
-            this.setSpreadsheetId(spreadsheetId);
+            this.spreadsheetId = spreadsheetId;
         }
     }
 
     insert = async (table: string, row: Array<string>) => {
         const start = this.getA1Notation(1, 0);
         const end = this.getA1Notation(1, row.length - 1);
-        await (this.api.client as any).sheets.spreadsheets.values.append({
-            spreadsheetId: this.getSpreadsheetId(),
+        await this.api.client.sheets.spreadsheets.values.append({
+            spreadsheetId: this.spreadsheetId,
             valueInputOption: 'USER_ENTERED',
             insertDataOption: 'INSERT_ROWS',
             range: `${table}!${start}:${end}`,
-            values: [[uuid()].concat(row)],
+            values: [row],
         });
     }
 
     private getRowCount = async (table: string) => {
         const { body } = await this.api.client.sheets.spreadsheets.get({
 
-            spreadsheetId: this.getSpreadsheetId(),
+            spreadsheetId: this.spreadsheetId,
         });
         const { sheets } = JSON.parse(body);
         const { properties } = sheets.find((sheet: any) => sheet.properties.title === table);
@@ -173,7 +176,7 @@ export class SheetsProvider extends RecordsProvider {
     private getSheetId = async (table: string): Promise<string> => {
         const { body } = await this.api.client.sheets.spreadsheets.get({
 
-            spreadsheetId: this.getSpreadsheetId(),
+            spreadsheetId: this.spreadsheetId,
         });
         const { sheets } = JSON.parse(body);
         const { properties } = sheets.find((sheet: any) => sheet.properties.title === table);
@@ -187,7 +190,7 @@ export class SheetsProvider extends RecordsProvider {
         const queryStart = this.getA1Notation(1, 0);
         const queryEnd = this.getA1Notation(1 + rowCount, 0);
         const { body } = await this.api.client.sheets.spreadsheets.values.update({
-            spreadsheetId: this.getSpreadsheetId(),
+            spreadsheetId: this.spreadsheetId,
             valueInputOption: 'USER_ENTERED',
             range: `Query!${start}:${end}`,
             values: [[`=MATCH("${id}", ${table}!${queryStart}:${queryEnd}, 0)`]],
@@ -200,12 +203,13 @@ export class SheetsProvider extends RecordsProvider {
     get = async (table: string): Promise<string[][]> => {
         const rowCount = await this.getRowCount(table);
         if (rowCount > 0) {
+            const { columns } = getTableMetadata(this.schema, table);
             const start = this.getA1Notation(1, 0);
-            const end = this.getA1Notation(1 + rowCount, this.schema(table).columns.length - 1);
+            const end = this.getA1Notation(1 + rowCount, columns.length - 1);
 
             const { body } = await this.api.client.sheets.spreadsheets.values.get({
 
-                spreadsheetId: this.getSpreadsheetId(),
+                spreadsheetId: this.spreadsheetId,
                 range: `${table}!${start}:${end}`,
             });
             const { values } = JSON.parse(body);
@@ -218,7 +222,7 @@ export class SheetsProvider extends RecordsProvider {
     delete = async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
         await this.api.client.sheets.spreadsheets.batchUpdate({
-            spreadsheetId: this.getSpreadsheetId(),
+            spreadsheetId: this.spreadsheetId,
             requests: [
                 {
                     deleteDimension: {

@@ -1,5 +1,5 @@
 import create from 'zustand';
-import { Records, SetupOptions } from './records';
+import { Records, RecordsSetupOptions } from './records';
 import * as Providers from './providers';
 
 const records = new Records(Providers.Sheets);
@@ -12,7 +12,7 @@ type State = {
     isAuthenticated: boolean;
     isConnected: boolean;
     records: Records;
-    connect: (options: SetupOptions) => void;
+    connect: (options: RecordsSetupOptions) => void;
     disconnect: () => void;
     initialize: () => void;
     login: () => void;

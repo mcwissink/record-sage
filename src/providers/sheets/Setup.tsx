@@ -11,7 +11,7 @@ export const Setup: React.VFC = () => {
             <div>Link to an existing spreadsheet</div>
             <form onSubmit={e => {
                 e.preventDefault();
-                connect({ spreadsheetId });
+                connect({ provider: { spreadsheetId } });
             }}>
                 <label>
                     Spreadsheet ID:{' '}

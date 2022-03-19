@@ -38,8 +38,8 @@ export const ManageRecords: React.VFC = () => {
             </select>
             <br />
             <br />
-            {rows.map((row, i) => (
-                <div key={i}>
+            {rows.map((row) => (
+                <div key={row[0]}>
                     {row.map((cell, j) => <span key={j}>{cell} </span>)}
                     <button onClick={onDelete(row[0])}>Delete</button>
                 </div>

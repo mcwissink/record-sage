@@ -28,12 +28,14 @@ export const RecordEntry: React.VFC = () => {
         register,
         control,
         handleSubmit,
+        watch,
     } = useForm<Form>({
         defaultValues: {
             date: format(new Date(), 'yyyy-MM-dd'),
             applications: [{}],
         }
     });
+    const formData = watch();
 
     const { fields: formFields, append, remove } = useFieldArray({
         control,
@@ -42,15 +44,18 @@ export const RecordEntry: React.VFC = () => {
 
     const onSubmit: React.FormEventHandler = (e) => {
         e.preventDefault();
-        handleSubmit(({ date, field, crop, acres, applications }) => {
-            records.insert('ChemicalApplication', [
-                date,
-                field,
-                crop,
-                acres,
-                applications[0].chemical,
-                applications[0].amount,
-            ])
+        handleSubmit(async ({ date, field, crop, acres, applications }) => {
+            await Promise.all(
+                applications.map(async ({ chemical, amount }) =>
+                    records.insert('ChemicalApplication', [
+                        date,
+                        field,
+                        crop,
+                        acres,
+                        chemical,
+                        amount,
+                    ]))
+            );
         })();
     }
 
@@ -146,6 +151,14 @@ export const RecordEntry: React.VFC = () => {
                         'hidden': step !== 3
                     })}
                 >
+                    <span>{formData.date} {formData.field} {formData.crop} {formData.acres}</span>
+                    <ul>
+                        {formData.applications.map((application, index) => (
+                            <li key={index}>
+                                <span>{application.chemical} {application.amount}</span>
+                            </li>
+                        ))}
+                    </ul>
                     <button type="submit">Compete</button>
                 </div>
             </form>
