@@ -49,7 +49,6 @@ export class Cache {
     insert = async (table: string, row: Array<string>) => {
         const transaction = this.db.transaction(table, 'readwrite')
         const store = transaction.objectStore(table);
-        console.log('adding', this.convertRowArray(table, row))
         store.add(this.convertRowArray(table, row));
         return new Promise((resolve, reject) => {
             transaction.addEventListener('complete', resolve);
@@ -65,6 +64,19 @@ export class Cache {
         return new Promise((resolve, reject) => {
             request.addEventListener('success', () => resolve(
                 request.result.map(this.convertRowObject)
+            ));
+            request.addEventListener('error', reject);
+        });
+    }
+
+    find = async (table: string, id: string): Promise<string[]> => {
+        const request = this.db
+            .transaction(table, 'readonly')
+            .objectStore(table)
+            .get(id);
+        return new Promise((resolve, reject) => {
+            request.addEventListener('success', () => resolve(
+                this.convertRowObject(request.result)
             ));
             request.addEventListener('error', reject);
         });
@@ -89,7 +101,5 @@ export class Cache {
         }, {});
     }
 
-    private convertRowObject = (row: Record<string, string>) => {
-        return Object.values(row);
-    }
+    private convertRowObject = (row: Record<string, string>) => Object.values(row);
 }

@@ -28,6 +28,11 @@ export const ManageRecords: React.VFC = () => {
         records.get(table).then(setRows);
     };
 
+    const onSync = (id: string) => async () => {
+        await records.sync(table, id);
+        records.get(table).then(setRows);
+    };
+
     return (
         <div>
             <select defaultValue={'empty'} onChange={e => setTable(e.target.value)}>
@@ -42,6 +47,9 @@ export const ManageRecords: React.VFC = () => {
                 <div key={row[0]}>
                     {row.map((cell, j) => <span key={j}>{cell} </span>)}
                     <button onClick={onDelete(row[0])}>Delete</button>
+                    {row[row.length - 1] === 'cached' ? (
+                        <button onClick={onSync(row[0])}>Sync</button>
+                    ) : null}
                 </div>
             ))}
             <br />

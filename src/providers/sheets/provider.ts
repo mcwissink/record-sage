@@ -219,6 +219,21 @@ export class SheetsProvider extends RecordsProvider {
         }
     }
 
+    find = async (table: string, id: string) => {
+        const rowIndex = await this.getIndexById(table, id);
+        const { columns } = getTableMetadata(this.schema, table);
+        const start = this.getA1Notation(1, 0);
+        const end = this.getA1Notation(rowIndex, columns.length - 1);
+
+        const { body } = await this.api.client.sheets.spreadsheets.values.get({
+
+            spreadsheetId: this.spreadsheetId,
+            range: `${table}!${start}:${end}`,
+        });
+        const { values } = JSON.parse(body);
+        return values;
+    }
+
     delete = async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
         await this.api.client.sheets.spreadsheets.batchUpdate({

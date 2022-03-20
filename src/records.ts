@@ -92,8 +92,8 @@ export class Records {
 
     insert = async (table: string, row: Array<string>) => {
         const rowWithId = [this.generateId()].concat(row);
-        // await this.cache.insert(table, rowWithId);
-        return await this.provider.insert(table, rowWithId);
+        await this.cache.insert(table, rowWithId);
+        await this.provider.insert(table, rowWithId);
     }
 
     get = async (table: string) => {
@@ -109,7 +109,13 @@ export class Records {
 
     delete = async (table: string, id: string) => {
         await this.cache.delete(table, id);
-        // return await this.provider.delete(table, id);
+        return await this.provider.delete(table, id);
+    }
+
+    sync = async (table: string, id: string) => {
+        const row = await this.cache.find(table, id);
+        await this.provider.insert(table, row);
+        await this.cache.delete(table, id);
     }
 }
 
@@ -154,6 +160,9 @@ export class RecordsProvider {
     }
     async get(_table: string): Promise<any> {
         throw new Error(`'get' is not implemented`);
+    }
+    async find(_table: string, _id: string): Promise<any> {
+        throw new Error(`'find' is not implemented`);
     }
     async update(_table: string): Promise<any> {
         throw new Error(`'update' is not implemented`);
