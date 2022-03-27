@@ -2,6 +2,14 @@ import React from 'react';
 import { v4 as uuid } from 'uuid';
 import { Cache, JournalAction } from './cache';
 
+const online: {
+    <Return extends void, Function extends (...args: any[]) => Promise<Return> | Return>(fn: Function): Function
+    <Return, Function extends (...args: any[]) => Promise<Return> | Return>(fn: Function, fallback: Return): Function
+} = <Return, Function extends (...args: any[]) => Promise<Return> | Return>(fn: Function, fallback?: Return): Function => {
+    return navigator.onLine ? fn : (() => fallback) as Function;
+}
+
+
 export type Schema<T = any> = Array<{
     table: string;
     columns: string[];
@@ -39,8 +47,13 @@ export class Records {
         this.cache = new Cache();
         if (this.isSetup()) {
             this.cache.connect(this.schema);
-            this.provider.connect(this.schema);
+            online(this.provider.connect)(this.schema);
         }
+
+        window.addEventListener('online', async () => {
+            await this.provider.connect(this.schema);
+            await this.sync();
+        });
     }
 
     get schema() {
@@ -60,9 +73,9 @@ export class Records {
 
     isSetup = () => localStorage.getItem(Records.SCHEMA_KEY);
 
-    isAuthenticated = () => this.provider.isAuthenticated();
+    isAuthenticated = () => online(this.provider.isAuthenticated, true)();
 
-    isConnected = () => this.provider.isConnected();
+    isConnected = () => online(this.provider.isConnected, true)();
 
     connect = async (options: RecordsSetupOptions) => {
         if (options.schema) {
@@ -86,13 +99,14 @@ export class Records {
 
     insert = async (table: string, row: Array<string>) => {
         await this.cache.insert(table, [this.generateId()].concat(row));
+        online(this.sync)();
     }
 
     get = async (table: string) => {
         const cachedData = await this.cache.get(table);
         return cachedData
             .map(data => [...data, 'cached'])
-            .concat(await this.provider.get(table));
+            .concat(await online(this.provider.get, [])(table));
     }
 
     private generateId() {
@@ -101,10 +115,11 @@ export class Records {
 
     delete = async (table: string, id: string) => {
         await this.cache.delete(table, id);
-        // return await this.provider.delete(table, id);
+        await online(this.provider.delete)(table, id);
     }
 
     sync = async () => {
+        window.dispatchEvent(new Event('records:syncing'));
         await this.cache.sync(async ({ id, table, action }) => {
             try {
                 switch (action) {
@@ -118,6 +133,7 @@ export class Records {
                 return false;
             }
         });
+        window.dispatchEvent(new Event('records:synced'));
     }
 }
 

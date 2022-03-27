@@ -35,7 +35,7 @@ class Database {
         this._db = db;
     }
 
-    resolve = <TResult>(request: IDBRequest<TResult>): Promise<TResult> => new Promise((resolve, reject) => {
+    resolve = <Result>(request: IDBRequest<Result>): Promise<Result> => new Promise((resolve, reject) => {
         request.addEventListener('success', () => resolve(request.result));
         request.addEventListener('error', reject);
     });
@@ -77,7 +77,7 @@ class Database {
             .delete(id)
     );
 
-    transaction = async <TResult>(table: string, cb: (store: IDBObjectStore) => IDBRequest<TResult>) => this.resolve<TResult>(
+    transaction = async <Result>(table: string, cb: (store: IDBObjectStore) => IDBRequest<Result>) => this.resolve<Result>(
         cb(
             this.db
                 .transaction(table, 'readwrite')

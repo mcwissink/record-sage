@@ -6,6 +6,7 @@ export const ManageRecords: React.VFC = () => {
     const [table, setTable] = useState('');
     const [rows, setRows] = useState<string[][]>([]);
     const [insert, setInsert] = useState('');
+    const [syncing, setSyncing] = useState(false);
     const {
         records,
     } = useRecords();
@@ -13,6 +14,20 @@ export const ManageRecords: React.VFC = () => {
     useEffect(() => {
         if (table) {
             records.get(table).then(setRows);
+        }
+    }, [records, table]);
+
+    useEffect(() => {
+        const onSyncing = () => setSyncing(true);
+        const onSynced = () => {
+            setSyncing(false);
+            records.get(table).then(setRows);
+        };
+        window.addEventListener('records:syncing', onSyncing);
+        window.addEventListener('records:synced', onSynced);
+        return () => {
+            window.removeEventListener('records:syncing', onSyncing);
+            window.removeEventListener('records:synced', onSynced);
         }
     }, [records, table]);
 
@@ -35,6 +50,7 @@ export const ManageRecords: React.VFC = () => {
 
     return (
         <div>
+            {syncing ? <div>Syncing...</div> : null}
             <select defaultValue={'empty'} onChange={e => setTable(e.target.value)}>
                 <option disabled value={'empty'}>Select a table</option>
                 {schema.map(({ table }) => (

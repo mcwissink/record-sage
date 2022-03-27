@@ -1,12 +1,14 @@
 import { RecordsProvider, Schema, ProviderSetupOptions, getTableMetadata } from '../../records';
+import './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {
     private initialized?: Promise<void>;
-    private api: any = gapi;
+    private api: any;
     private _schema?: Schema;
     private _spreadsheetId?: string;
-    constructor() {
-        super();
+
+    private initialize = async () => {
+        this.api = gapi;
         this.initialized = new Promise((resolve, reject) => {
             this.api.load('client:auth2', async () => {
                 try {
@@ -70,12 +72,12 @@ export class SheetsProvider extends RecordsProvider {
         localStorage.setItem(SheetsProvider.SPREADSHEET_ID_KEY, spreadsheetId);
     }
 
-    async isAuthenticated() {
+    isAuthenticated = async () => {
         await this.initialized;
         return this.api.auth2.getAuthInstance().isSignedIn.get();
     }
 
-    async isConnected() {
+    isConnected = async () => {
         await this.initialized;
         return Boolean(localStorage.getItem(SheetsProvider.SPREADSHEET_ID_KEY));
     }
@@ -94,11 +96,15 @@ export class SheetsProvider extends RecordsProvider {
         localStorage.removeItem(SheetsProvider.SPREADSHEET_ID_KEY);
     }
 
-    async connect(schema: Schema) {
+    connect = async (schema: Schema) => {
+        if (!this.initialized) {
+            await this.initialize();
+        }
         this.schema = schema;
     }
 
     async setup(options: ProviderSetupOptions<{ spreadsheetId: string }>) {
+        await this.initialize();
         this.schema = options.schema;
         if (options.provider) {
             await this.api.client.sheets.spreadsheets.get({
