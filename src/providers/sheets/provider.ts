@@ -25,6 +25,7 @@ export class SheetsProvider extends RecordsProvider {
                 }
             });
         });
+        return this.initialized;
     }
 
     private ensure<T>(value?: T) {
