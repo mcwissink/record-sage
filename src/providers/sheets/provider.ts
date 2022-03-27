@@ -1,14 +1,13 @@
 import { RecordsProvider, Schema, ProviderSetupOptions, getTableMetadata } from '../../records';
-import './../../gapi';
+import gapi from './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {
     private initialized?: Promise<void>;
-    private api: any;
+    private api: any = gapi;
     private _schema?: Schema;
     private _spreadsheetId?: string;
 
     private initialize = async () => {
-        this.api = gapi;
         this.initialized = new Promise((resolve, reject) => {
             this.api.load('client:auth2', async () => {
                 try {

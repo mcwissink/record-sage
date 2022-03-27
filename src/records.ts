@@ -88,14 +88,17 @@ export class Records {
     }
 
     disconnect = async () => {
-        //localStorage.removeItem(Records.SCHEMA_KEY);
-        //await this.provider.disconnect();
+        localStorage.removeItem(Records.SCHEMA_KEY);
+        await this.provider.disconnect();
         await this.cache.disconnect();
     }
 
     login = () => this.provider.login();
 
-    logout = () => this.provider.logout();
+    logout = async () => {
+        await this.disconnect();
+        return await this.provider.logout();
+    };
 
     insert = async (table: string, row: Array<string>) => {
         await this.cache.insert(table, [this.generateId()].concat(row));
