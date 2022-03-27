@@ -8,22 +8,24 @@ export class SheetsProvider extends RecordsProvider {
     private _spreadsheetId?: string;
 
     private initialize = async () => {
-        this.initialized = new Promise((resolve, reject) => {
-            this.api.load('client:auth2', async () => {
-                try {
-                    await this.api.client.init({
-                        apiKey: 'AIzaSyCNEjUa-oT-sppE2yix52q4KeudcJpdIXw',
-                        clientId: '794158492809-ukkr1lfsml3ghmclr4po0rfongru44dq.apps.googleusercontent.com',
-                        scope: 'https://www.googleapis.com/auth/spreadsheets',
-                        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-                    });
-                    resolve();
-                } catch (error) {
-                    console.error(error);
-                    reject(error);
-                }
+        if (!this.initialized) {
+            this.initialized = new Promise((resolve, reject) => {
+                this.api.load('client:auth2', async () => {
+                    try {
+                        await this.api.client.init({
+                            apiKey: 'AIzaSyCNEjUa-oT-sppE2yix52q4KeudcJpdIXw',
+                            clientId: '794158492809-ukkr1lfsml3ghmclr4po0rfongru44dq.apps.googleusercontent.com',
+                            scope: 'https://www.googleapis.com/auth/spreadsheets',
+                            discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+                        });
+                        resolve(this.api);
+                    } catch (error) {
+                        console.error(error);
+                        reject(error);
+                    }
+                });
             });
-        });
+        }
         return this.initialized;
     }
 
@@ -73,12 +75,12 @@ export class SheetsProvider extends RecordsProvider {
     }
 
     isAuthenticated = async () => {
-        await this.initialized;
+        await this.initialize();
         return this.api.auth2.getAuthInstance().isSignedIn.get();
     }
 
     isConnected = async () => {
-        await this.initialized;
+        await this.initialize();
         return Boolean(localStorage.getItem(SheetsProvider.SPREADSHEET_ID_KEY));
     }
 
@@ -97,9 +99,7 @@ export class SheetsProvider extends RecordsProvider {
     }
 
     connect = async (schema: Schema) => {
-        if (!this.initialized) {
-            await this.initialize();
-        }
+        await this.initialize();
         this.schema = schema;
     }
 
