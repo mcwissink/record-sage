@@ -1,11 +1,12 @@
 import React from 'react';
 import { v4 as uuid } from 'uuid';
-import { Cache } from './cache';
+import { Cache, JournalAction } from './cache';
 
-export type Schema = Array<{
+export type Schema<T = any> = Array<{
     table: string;
     columns: string[];
     rows?: Array<Array<number | string>>;
+    options?: T;
 }>;
 
 export type Provider = {
@@ -59,13 +60,9 @@ export class Records {
 
     isSetup = () => localStorage.getItem(Records.SCHEMA_KEY);
 
-    isAuthenticated = async () => {
-        return await this.provider.isAuthenticated();
-    }
+    isAuthenticated = () => this.provider.isAuthenticated();
 
-    isConnected = async () => {
-        return await this.provider.isConnected();
-    }
+    isConnected = () => this.provider.isConnected();
 
     connect = async (options: RecordsSetupOptions) => {
         if (options.schema) {
@@ -73,34 +70,29 @@ export class Records {
         }
         const schema = options.schema || this.schema;
 
-        await this.cache.setup(schema);
+        await this.cache.connect(schema);
         return await this.provider.setup({ ...options, schema });
     }
 
     disconnect = async () => {
-        localStorage.removeItem(Records.SCHEMA_KEY);
-        return await this.provider.disconnect();
+        //localStorage.removeItem(Records.SCHEMA_KEY);
+        //await this.provider.disconnect();
+        await this.cache.disconnect();
     }
 
-    login = async () => {
-        return await this.provider.login();
-    }
+    login = () => this.provider.login();
 
-    logout = async () => {
-        return await this.provider.logout();
-    }
+    logout = () => this.provider.logout();
 
     insert = async (table: string, row: Array<string>) => {
-        const rowWithId = [this.generateId()].concat(row);
-        await this.cache.insert(table, rowWithId);
-        await this.provider.insert(table, rowWithId);
+        await this.cache.insert(table, [this.generateId()].concat(row));
     }
 
     get = async (table: string) => {
         const cachedData = await this.cache.get(table);
-        return cachedData.map(data => [...data, 'cached']).concat(
-            await this.provider.get(table)
-        );
+        return cachedData
+            .map(data => [...data, 'cached'])
+            .concat(await this.provider.get(table));
     }
 
     private generateId() {
@@ -109,13 +101,23 @@ export class Records {
 
     delete = async (table: string, id: string) => {
         await this.cache.delete(table, id);
-        return await this.provider.delete(table, id);
+        // return await this.provider.delete(table, id);
     }
 
-    sync = async (table: string, id: string) => {
-        const row = await this.cache.find(table, id);
-        await this.provider.insert(table, row);
-        await this.cache.delete(table, id);
+    sync = async () => {
+        await this.cache.sync(async ({ id, table, action }) => {
+            try {
+                switch (action) {
+                    case JournalAction.Insert:
+                        const row = await this.cache.find(table, id);
+                        await this.provider.insert(table, row);
+                        break;
+                }
+                return true;
+            } catch {
+                return false;
+            }
+        });
     }
 }
 

@@ -66,9 +66,9 @@ export const RecordEntry: React.VFC = () => {
                 crops,
                 chemicals,
             ] = await Promise.all([
-                records.get('Field'),
-                records.get('Crop'),
-                records.get('Chemical'),
+                records.get('field'),
+                records.get('crop'),
+                records.get('chemical'),
             ]);
             setFields(fields.map(([_id, name]: any) => name));
             setCrops(crops.map(([_id, name]: any) => name));

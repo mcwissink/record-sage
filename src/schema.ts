@@ -2,19 +2,19 @@ import { Schema } from "./records";
 
 export const schema: Schema = [
     {
-        table: 'ChemicalApplication',
+        table: 'chemical-application',
         columns: ['id', 'date', 'field', 'crop', 'acres', 'chemical', 'amount']
     },
     {
-        table: 'Chemical',
+        table: 'chemical',
         columns: ['id', 'name']
     },
     {
-        table: 'Field',
+        table: 'field',
         columns: ['id', 'name']
     },
     {
-        table: 'Crop',
+        table: 'crop',
         columns: ['id', 'name']
     },
 ];
