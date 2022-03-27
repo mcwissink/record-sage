@@ -1,22 +1,15 @@
 {
   "files": {
-    "main.css": "/record-sage/static/css/main.b10c40f9.chunk.css",
-    "main.js": "/record-sage/static/js/main.ca0a9d84.chunk.js",
-    "main.js.map": "/record-sage/static/js/main.ca0a9d84.chunk.js.map",
-    "runtime-main.js": "/record-sage/static/js/runtime-main.714ba2f9.js",
-    "runtime-main.js.map": "/record-sage/static/js/runtime-main.714ba2f9.js.map",
-    "static/js/2.c298cd63.chunk.js": "/record-sage/static/js/2.c298cd63.chunk.js",
-    "static/js/2.c298cd63.chunk.js.map": "/record-sage/static/js/2.c298cd63.chunk.js.map",
-    "static/js/3.d543171c.chunk.js": "/record-sage/static/js/3.d543171c.chunk.js",
-    "static/js/3.d543171c.chunk.js.map": "/record-sage/static/js/3.d543171c.chunk.js.map",
+    "main.css": "/record-sage/static/css/main.d9952f53.css",
+    "main.js": "/record-sage/static/js/main.72cd9597.js",
+    "static/js/787.b44e90fc.chunk.js": "/record-sage/static/js/787.b44e90fc.chunk.js",
     "index.html": "/record-sage/index.html",
-    "static/css/main.b10c40f9.chunk.css.map": "/record-sage/static/css/main.b10c40f9.chunk.css.map",
-    "static/js/2.c298cd63.chunk.js.LICENSE.txt": "/record-sage/static/js/2.c298cd63.chunk.js.LICENSE.txt"
+    "main.d9952f53.css.map": "/record-sage/static/css/main.d9952f53.css.map",
+    "main.72cd9597.js.map": "/record-sage/static/js/main.72cd9597.js.map",
+    "787.b44e90fc.chunk.js.map": "/record-sage/static/js/787.b44e90fc.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/runtime-main.714ba2f9.js",
-    "static/js/2.c298cd63.chunk.js",
-    "static/css/main.b10c40f9.chunk.css",
-    "static/js/main.ca0a9d84.chunk.js"
+    "static/css/main.d9952f53.css",
+    "static/js/main.72cd9597.js"
   ]
 }
