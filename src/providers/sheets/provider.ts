@@ -18,7 +18,7 @@ export class SheetsProvider extends RecordsProvider {
                             scope: 'https://www.googleapis.com/auth/spreadsheets',
                             discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
                         });
-                        resolve(this.api);
+                        resolve();
                     } catch (error) {
                         console.error(error);
                         reject(error);

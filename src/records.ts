@@ -3,10 +3,10 @@ import { v4 as uuid } from 'uuid';
 import { Cache, JournalAction } from './cache';
 
 const online: {
-    <Return extends void, Function extends (...args: any[]) => Promise<Return> | Return>(fn: Function): Function
-    <Return, Function extends (...args: any[]) => Promise<Return> | Return>(fn: Function, fallback: Return): Function
-} = <Return, Function extends (...args: any[]) => Promise<Return> | Return>(fn: Function, fallback?: Return): Function => {
-    return navigator.onLine ? fn : (() => fallback) as Function;
+    <Return extends void, Args extends any[]>(fn: (...args: Args) => Promise<Return> | Return): (...args: Args) => Promise<Return> | Return
+    <Return, Args extends any[]>(fn: (...args: Args) => Promise<Return> | Return, fallback: Return): (...args: Args) => Promise<Return> | Return,
+} = <Return, Args extends any[]>(fn: (...args: Args) => Promise<Return> | Return, fallback?: Return): (...args: Args) => Promise<Return> | Return => {
+    return navigator.onLine ? fn : (() => fallback!);
 }
 
 
@@ -102,15 +102,12 @@ export class Records {
 
     insert = async (table: string, row: Array<string>) => {
         await this.cache.insert(table, [this.generateId()].concat(row));
-        online(this.sync)();
+        await online(this.sync)();
     }
 
-    get = async (table: string) => {
-        const cachedData = await this.cache.get(table);
-        return cachedData
-            .map(data => [...data, 'cached'])
-            .concat(await online(this.provider.get, [])(table));
-    }
+    get = async (table: string) => online(this.provider.get, [])(table);
+
+    getCache = (table: string) => this.cache.get(table);
 
     private generateId() {
         return uuid();
@@ -118,17 +115,19 @@ export class Records {
 
     delete = async (table: string, id: string) => {
         await this.cache.delete(table, id);
-        await online(this.provider.delete)(table, id);
+        await online(this.sync)();
     }
 
     sync = async () => {
         window.dispatchEvent(new Event('records:syncing'));
-        await this.cache.sync(async ({ id, table, action }) => {
+        await this.cache.sync(async (entry) => {
             try {
-                switch (action) {
+                switch (entry.action) {
                     case JournalAction.Insert:
-                        const row = await this.cache.find(table, id);
-                        await this.provider.insert(table, row);
+                        await this.provider.insert(entry.table, entry.payload);
+                        break;
+                    case JournalAction.Delete:
+                        await this.provider.delete(entry.table, entry.payload);
                         break;
                 }
                 return true;

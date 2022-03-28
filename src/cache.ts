@@ -2,14 +2,19 @@ import { getTableMetadata, Schema } from "./records";
 
 export enum JournalAction {
     Insert = 'insert',
+    Delete = 'delete',
 }
 
-interface JournalEntry {
+interface JournalPayload<Action extends JournalAction, Payload> {
+    action: Action; 
+    payload: Payload;
     id: string;
     table: string;
-    index: string;
-    action: JournalAction;
 }
+
+type JournalEntry = 
+    | JournalPayload<JournalAction.Insert, string[]> 
+    | JournalPayload<JournalAction.Delete, string>
 
 type DatabaseSchema = Schema<IDBObjectStoreParameters | undefined>
 class Database {
@@ -70,7 +75,7 @@ class Database {
             .get(id)
     );
 
-    delete = async (table: string, id: string) => this.resolve(
+    delete = async (table: string, id: string | number) => this.resolve(
         this.db
             .transaction(table, 'readwrite')
             .objectStore(table)
@@ -89,36 +94,23 @@ class Database {
 }
 
 class Journal {
-    private static ENTRY = 'journal-entry';
+    private static ENTRY = 'entry';
     constructor(
         private db = new Database('record-sage-journal'),
     ) {}
 
     get = (): Promise<JournalEntry[]> => this.db.get(Journal.ENTRY);
 
-    insert = (row: Record<string, any>) => this.db.insert(Journal.ENTRY, row);
+    insert = (entry: Omit<JournalEntry, 'id'>) => this.db.insert(Journal.ENTRY, entry);
 
-    delete = (index: string) => this.db.delete(Journal.ENTRY, index);
-
-    clear = async (id: string) => {
-        const entries = await this.db.transaction(Journal.ENTRY, (store) => (
-            store
-                .index('id')
-                .getAll(id)
-        ));
-        await Promise.all(
-            entries.map(({ index }: JournalEntry) => this.db.delete(Journal.ENTRY, index))
-        );
-    }
+    delete = (id: string | number) => this.db.delete(Journal.ENTRY, id);
 
     connect = async () => {
         await this.db.connect((db) => {
-            db
-                .createObjectStore(Journal.ENTRY, {
-                    keyPath: 'index',
-                    autoIncrement: true,
-                })
-                .createIndex('id', 'id', { unique: false});
+            db.createObjectStore(Journal.ENTRY, {
+                keyPath: 'id',
+                autoIncrement: true,
+            })
         });
     }
 
@@ -160,7 +152,7 @@ export class Cache {
     insert = async (table: string, row: Array<string>) => {
         await this.db.insert(table, this.convertRowArray(table, row))
         await this.journal.insert({
-            id: row[0],
+            payload: row,
             table,
             action: JournalAction.Insert,
         });
@@ -177,17 +169,18 @@ export class Cache {
 
     delete = async (table: string, id: string) => {
         await this.db.delete(table, id);
-        await this.journal.clear(id);
+        await this.journal.insert({
+            payload: id,
+            table,
+            action: JournalAction.Delete,
+        })
     }
 
     sync = async (cb: (entry: JournalEntry) => Promise<boolean>) => {
         const entries = await this.journal.get()
         for (const entry of entries) {
             if (await cb(entry)) {
-                await Promise.all([
-                    this.db.delete(entry.table, entry.id),
-                    this.journal.delete(entry.index),
-                ]);
+                await this.journal.delete(entry.id);
             }
         }
     }
