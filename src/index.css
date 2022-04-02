@@ -1,12 +1,3 @@
-@tailwind base;
-@tailwind components;
-button {
-    @apply p-2 bg-slate-300 rounded disabled:bg-slate-100;
-}
-
-input {
-    @apply p-2;
-}
 @tailwind utilities;
 
 body {

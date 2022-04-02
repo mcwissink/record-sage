@@ -6,14 +6,14 @@ export enum JournalAction {
 }
 
 interface JournalPayload<Action extends JournalAction, Payload> {
-    action: Action; 
+    action: Action;
     payload: Payload;
     id: string;
     table: string;
 }
 
-type JournalEntry = 
-    | JournalPayload<JournalAction.Insert, string[]> 
+type JournalEntry =
+    | JournalPayload<JournalAction.Insert, string[]>
     | JournalPayload<JournalAction.Delete, string>
 
 type DatabaseSchema = Schema<IDBObjectStoreParameters | undefined>
@@ -97,7 +97,7 @@ class Journal {
     private static ENTRY = 'entry';
     constructor(
         private db = new Database('record-sage-journal'),
-    ) {}
+    ) { }
 
     get = (): Promise<JournalEntry[]> => this.db.get(Journal.ENTRY);
 
@@ -122,7 +122,7 @@ export class Cache {
     constructor(
         private db = new Database('record-sage'),
         public journal = new Journal(),
-    ) {}
+    ) { }
 
     private ensure<T>(value?: T) {
         if (!value) {
@@ -177,12 +177,17 @@ export class Cache {
     }
 
     sync = async (cb: (entry: JournalEntry) => Promise<boolean>) => {
-        const entries = await this.journal.get()
+        const entries = await this.journal.get();
+        console.log(entries);
         for (const entry of entries) {
             if (await cb(entry)) {
                 await this.journal.delete(entry.id);
+                if (entry.action === 'insert') {
+                    await this.db.delete(entry.table, entry.payload[0]);
+                }
             }
         }
+        console.log(await this.journal.get());
     }
 
     disconnect = async () => {

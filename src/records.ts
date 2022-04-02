@@ -142,14 +142,6 @@ export class Records {
 type ProviderSetup = Record<string, any>;
 export type RecordsSetupOptions<T extends ProviderSetup = ProviderSetup> = {
     schema: Schema
-    provider?: never;
-} | {
-    schema?: never;
-    provider: T
-};
-
-export type ProviderSetupOptions<T extends ProviderSetup = ProviderSetup> = {
-    schema: Schema
     provider?: T;
 };
 
@@ -157,7 +149,7 @@ export class RecordsProvider {
     async connect(_schema: Schema): Promise<void> {
         throw new Error(`'connect' is not implemented`);
     }
-    async setup(_options: ProviderSetupOptions): Promise<void> {
+    async setup(_options: RecordsSetupOptions): Promise<void> {
         throw new Error(`'setup' is not implemented`);
     }
     async disconnect(): Promise<void> {

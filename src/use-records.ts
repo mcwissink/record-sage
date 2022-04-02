@@ -12,7 +12,7 @@ type State = {
     isAuthenticated: boolean;
     isConnected: boolean;
     records: Records;
-    connect: (options: RecordsSetupOptions) => void;
+    connect: (options: RecordsSetupOptions) => Promise<void>;
     disconnect: () => void;
     initialize: () => void;
     login: () => void;

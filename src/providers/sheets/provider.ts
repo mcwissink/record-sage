@@ -1,7 +1,8 @@
-import { RecordsProvider, Schema, ProviderSetupOptions, getTableMetadata } from '../../records';
+import { RecordsProvider, Schema, RecordsSetupOptions, getTableMetadata } from '../../records';
 import gapi from './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {
+    private static NOT_FOUND = '#REF!';
     private initialized?: Promise<void>;
     private api: any = gapi;
     private _schema?: Schema;
@@ -103,7 +104,7 @@ export class SheetsProvider extends RecordsProvider {
         this.schema = schema;
     }
 
-    async setup(options: ProviderSetupOptions<{ spreadsheetId: string }>) {
+    async setup(options: RecordsSetupOptions<{ spreadsheetId: string }>) {
         await this.initialize();
         this.schema = options.schema;
         if (options.provider) {
@@ -203,7 +204,11 @@ export class SheetsProvider extends RecordsProvider {
             includeValuesInResponse: true,
         });
         const { updatedData } = JSON.parse(body);
-        return Number(updatedData.values[0][0]);
+        const index = updatedData.values[0][0];
+        if (index === SheetsProvider.NOT_FOUND) {
+            return -1;
+        }
+        return Number(index);
     }
 
     get = async (table: string): Promise<string[][]> => {
@@ -242,6 +247,9 @@ export class SheetsProvider extends RecordsProvider {
 
     delete = async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
+        if (rowIndex === -1) {
+            return;
+        }
         await this.api.client.sheets.spreadsheets.batchUpdate({
             spreadsheetId: this.spreadsheetId,
             requests: [
