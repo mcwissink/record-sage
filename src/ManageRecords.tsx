@@ -4,7 +4,7 @@ import { schema } from './schema';
 import { useLoading } from './use-loading';
 
 export const ManageRecords: React.VFC = () => {
-    const [table, setTable] = useState('');
+    const [table, setTable] = useState(Object.keys(schema)[0]);
     const [rows, setRows] = useState<string[][]>([]);
     const [insert, setInsert] = useState('');
     const [syncing, setSyncing] = useState(false);
@@ -45,16 +45,10 @@ export const ManageRecords: React.VFC = () => {
         records.get(table).then(setRows);
     };
 
-    const onSync = () => async () => {
-        await records.sync();
-        records.get(table).then(setRows);
-    };
-
     return (
         <div>
             {syncing ? <div>Syncing...</div> : null}
             <select defaultValue={'empty'} onChange={e => setTable(e.target.value)}>
-                <option disabled value={'empty'}>Select a table</option>
                 {Object.keys(schema).map((table) => (
                     <option key={table} value={table}>{table}</option>
                 ))}
@@ -62,14 +56,24 @@ export const ManageRecords: React.VFC = () => {
             <br />
             <table>
                 <thead>
+                    <tr>
+                        {schema[table].columns.map((column) =>
+                            <td className="p-2" key={column}><b>{column}</b></td>
+                        )}
+                        <td className="p-2"><b>actions</b></td>
+                    </tr>
                 </thead>
                 <tbody>
                     {rows.map((row) => (
 
-                        <div key={row[0]}>
-                            {row.map((cell, j) => <span key={j}>{cell} </span>)}
-                            <button onClick={onDelete(row[0])}>Delete</button>
-                        </div>
+                        <tr key={row[0]}>
+                            {row.map((cell, j) =>
+                                <td className="p-2" key={j}>{cell} </td>
+                            )}
+                            <td className="p-2">
+                                <button onClick={onDelete(row[0])}>Delete</button>
+                            </td>
+                        </tr>
                     ))}
                 </tbody>
             </table>

@@ -10,6 +10,7 @@ const App: React.FC = () => {
         isInitialized,
         isAuthenticated,
         isConnected,
+        isOnline,
         disconnect,
         logout
     } = useRecords();
@@ -23,8 +24,13 @@ const App: React.FC = () => {
             {isInitialized ? (
                 isAuthenticated ? (
                     <>
-                        <button onClick={disconnect}>Disconnect</button>
-                        <button onClick={logout}>Logout</button>
+                        {isOnline ? (
+                            <>
+                                <button onClick={disconnect}>Disconnect</button>
+                                <button onClick={logout}>Logout</button>
+                                <span> - Online</span>
+                            </>
+                        ) : <span> - Offline</span>}
                         <hr />
                         {isConnected ? (
                             <>
