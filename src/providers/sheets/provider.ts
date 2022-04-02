@@ -2,7 +2,6 @@ import { RecordsProvider, Schema, RecordsSetupOptions } from '../../records';
 import gapi from './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {
-    private static NOT_FOUND = '#REF!';
     private initialized?: Promise<void>;
     private api: any = gapi;
     private _schema?: Schema;
@@ -206,11 +205,8 @@ export class SheetsProvider extends RecordsProvider {
             includeValuesInResponse: true,
         });
         const { updatedData } = JSON.parse(body);
-        const index = updatedData.values[0][0];
-        if (index === SheetsProvider.NOT_FOUND) {
-            return -1;
-        }
-        return Number(index);
+        const index = Number(updatedData.values[0][0]);
+        return isNaN(index) ? -1 : index;
     }
 
     get = async (table: string): Promise<string[][]> => {

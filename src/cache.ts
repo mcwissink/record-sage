@@ -178,7 +178,6 @@ export class Cache {
 
     sync = async (cb: (entry: JournalEntry) => Promise<boolean>) => {
         const entries = await this.journal.get();
-        console.log(entries);
         for (const entry of entries) {
             if (await cb(entry)) {
                 await this.journal.delete(entry.id);
@@ -187,7 +186,6 @@ export class Cache {
                 }
             }
         }
-        console.log(await this.journal.get());
     }
 
     disconnect = async () => {

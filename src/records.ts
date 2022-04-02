@@ -1,7 +1,7 @@
 import React from 'react';
 import { v4 as uuid } from 'uuid';
 import { Cache, JournalAction } from './cache';
-import { online } from './utils';
+import { online } from './utils/online';
 
 export type Schema<T = any> = Record<string, {
     columns: string[];

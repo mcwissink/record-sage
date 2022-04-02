@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useRecords } from './use-records';
 import { schema } from './schema';
 import { useLoading } from './use-loading';
+import { Button } from './ui/Button';
 
 export const ManageRecords: React.VFC = () => {
     const [table, setTable] = useState(Object.keys(schema)[0]);
@@ -15,7 +16,6 @@ export const ManageRecords: React.VFC = () => {
 
     useEffect(() => {
         if (table) {
-            records.get(table).then(console.log);
             records.get(table).then(setRows);
         }
     }, [records, table]);
@@ -72,7 +72,7 @@ export const ManageRecords: React.VFC = () => {
                                 <td className="p-2" key={j}>{cell} </td>
                             )}
                             <td className="p-2">
-                                <button onClick={onDelete(row[0])}>Delete</button>
+                                <Button onClick={onDelete(row[0])}>Delete</Button>
                             </td>
                         </tr>
                     ))}
@@ -81,9 +81,10 @@ export const ManageRecords: React.VFC = () => {
             <br />
             <form onSubmit={loading(onSubmit)}>
                 <input disabled={!table} value={insert} onChange={e => setInsert(e.target.value)} />
-                <button disabled={isLoading}>Submit</button>
+                <Button loading={isLoading}>Submit</Button>
             </form>
             <br />
+            <Button loading={true}>Submit</Button>
         </div >
     );
 }
