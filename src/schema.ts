@@ -1,20 +1,16 @@
 import { Schema } from "./records";
 
-export const schema: Schema = [
-    {
-        table: 'chemical-application',
+export const schema: Schema = {
+    'chemical-application': {
         columns: ['id', 'date', 'field', 'crop', 'acres', 'chemical', 'amount']
     },
-    {
-        table: 'chemical',
+    'chemical': {
         columns: ['id', 'name']
     },
-    {
-        table: 'field',
+    'field': {
         columns: ['id', 'name']
     },
-    {
-        table: 'crop',
+    'crop': {
         columns: ['id', 'name']
     },
-];
+};

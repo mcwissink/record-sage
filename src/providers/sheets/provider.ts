@@ -1,4 +1,4 @@
-import { RecordsProvider, Schema, RecordsSetupOptions, getTableMetadata } from '../../records';
+import { RecordsProvider, Schema, RecordsSetupOptions } from '../../records';
 import gapi from './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {
@@ -32,7 +32,7 @@ export class SheetsProvider extends RecordsProvider {
 
     private ensure<T>(value?: T) {
         if (!value) {
-            throw new Error('Provider has not been initialized');
+            throw new Error('provider has not been initialized');
         }
         return value;
     }
@@ -65,7 +65,7 @@ export class SheetsProvider extends RecordsProvider {
         if (!this._spreadsheetId) {
             const spreadsheetId = localStorage.getItem(SheetsProvider.SPREADSHEET_ID_KEY);
             if (!spreadsheetId) {
-                throw new Error('Missing spreadsheet ID');
+                throw new Error('missing spreadsheet ID');
             }
             this._spreadsheetId = spreadsheetId;
         }
@@ -113,15 +113,17 @@ export class SheetsProvider extends RecordsProvider {
             });
             this.spreadsheetId = options.provider.spreadsheetId;
         } else {
-            const schema = options.schema.concat([{
-                table: 'Query',
-                columns: [''],
-            }]);
+            const schema: Schema = {
+                ...options.schema,
+                query: {
+                    columns: [''],
+                }
+            };
             const { body } = await this.api.client.sheets.spreadsheets.create({
                 properties: {
                     title: `Record Sage - ${new Date().toLocaleString()}`
                 },
-                sheets: schema.map(({ table, columns, rows }) => ({
+                sheets: Object.entries(schema).map(([table, { columns, rows }]) => ({
                     properties: {
                         title: table,
                         gridProperties: {
@@ -214,7 +216,7 @@ export class SheetsProvider extends RecordsProvider {
     get = async (table: string): Promise<string[][]> => {
         const rowCount = await this.getRowCount(table);
         if (rowCount > 0) {
-            const { columns } = getTableMetadata(this.schema, table);
+            const { columns } = this.schema[table];
             const start = this.getA1Notation(1, 0);
             const end = this.getA1Notation(1 + rowCount, columns.length - 1);
 
@@ -232,7 +234,10 @@ export class SheetsProvider extends RecordsProvider {
 
     find = async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
-        const { columns } = getTableMetadata(this.schema, table);
+        if (rowIndex === -1) {
+            return null;
+        }
+        const { columns } = this.schema[table];
         const start = this.getA1Notation(1, 0);
         const end = this.getA1Notation(rowIndex, columns.length - 1);
 

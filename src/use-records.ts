@@ -12,7 +12,7 @@ type State = {
     isAuthenticated: boolean;
     isConnected: boolean;
     records: Records;
-    connect: (options: RecordsSetupOptions) => Promise<void>;
+    setup: (options: RecordsSetupOptions) => Promise<void>;
     disconnect: () => void;
     initialize: () => void;
     login: () => void;
@@ -23,8 +23,8 @@ export const useRecords = create<State>((set, get) => ({
     isAuthenticated: false,
     isConnected: false,
     records,
-    connect: async (options) => {
-        await get().records.connect(options)
+    setup: async (options) => {
+        await get().records.setup(options)
         set({
             isConnected: await get().records.isConnected(),
         })

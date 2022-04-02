@@ -10,8 +10,7 @@ const online: {
 }
 
 
-export type Schema<T = any> = Array<{
-    table: string;
+export type Schema<T = any> = Record<string, {
     columns: string[];
     rows?: Array<Array<number | string>>;
     options?: T;
@@ -21,14 +20,6 @@ export type Provider = {
     RecordsProvider: RecordsProvider;
     Login: React.VFC;
     Setup: React.VFC;
-}
-
-export const getTableMetadata = (schema: Schema, table: string) => {
-    const metadata = schema.find(({ table: key }) => key === table);
-    if (!metadata) {
-        throw new Error('table not in schema')
-    }
-    return metadata;
 }
 
 export class Records {
@@ -60,7 +51,7 @@ export class Records {
         if (!this._schema) {
             const schema = localStorage.getItem(Records.SCHEMA_KEY)
             if (!schema) {
-                throw new Error('Missing schema');
+                throw new Error('missing schema');
             }
             this._schema = JSON.parse(schema) as Schema;
         }
@@ -77,14 +68,14 @@ export class Records {
 
     isConnected = () => online(this.provider.isConnected, true)();
 
-    connect = async (options: RecordsSetupOptions) => {
+    setup = async (options: RecordsSetupOptions) => {
         if (options.schema) {
             this.schema = options.schema;
         }
         const schema = options.schema || this.schema;
 
         await this.cache.connect(schema);
-        return await this.provider.setup({ ...options, schema });
+        await this.provider.setup({ ...options, schema });
     }
 
     disconnect = async () => {
@@ -105,9 +96,7 @@ export class Records {
         await online(this.sync)();
     }
 
-    get = async (table: string) => online(this.provider.get, [])(table);
-
-    getCache = (table: string) => this.cache.get(table);
+    get = async (table: string) => (await this.cache.get(table)).concat(online(this.provider.get, [])(table));
 
     private generateId() {
         return uuid();

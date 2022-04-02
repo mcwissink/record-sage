@@ -6,7 +6,6 @@ import { useLoading } from './use-loading';
 export const ManageRecords: React.VFC = () => {
     const [table, setTable] = useState('');
     const [rows, setRows] = useState<string[][]>([]);
-    const [cacheRows, setCacheRows] = useState<string[][]>([]);
     const [insert, setInsert] = useState('');
     const [syncing, setSyncing] = useState(false);
     const { isLoading, loading } = useLoading();
@@ -17,7 +16,6 @@ export const ManageRecords: React.VFC = () => {
     useEffect(() => {
         if (table) {
             records.get(table).then(setRows);
-            records.getCache(table).then(setCacheRows);
         }
     }, [records, table]);
 
@@ -26,7 +24,6 @@ export const ManageRecords: React.VFC = () => {
         const onSynced = () => {
             setSyncing(false);
             records.get(table).then(setRows);
-            records.getCache(table).then(setCacheRows);
         };
         window.addEventListener('records:syncing', onSyncing);
         window.addEventListener('records:synced', onSynced);
@@ -41,13 +38,11 @@ export const ManageRecords: React.VFC = () => {
         await records.insert(table, insert.split(','));
         setInsert('');
         records.get(table).then(setRows);
-        records.getCache(table).then(setCacheRows);
     };
 
     const onDelete = (id: string) => async () => {
         await records.delete(table, id);
         records.get(table).then(setRows);
-        records.getCache(table).then(setCacheRows);
     };
 
     const onSync = () => async () => {
@@ -60,31 +55,24 @@ export const ManageRecords: React.VFC = () => {
             {syncing ? <div>Syncing...</div> : null}
             <select defaultValue={'empty'} onChange={e => setTable(e.target.value)}>
                 <option disabled value={'empty'}>Select a table</option>
-                {schema.map(({ table }) => (
+                {Object.keys(schema).map((table) => (
                     <option key={table} value={table}>{table}</option>
                 ))}
             </select>
             <br />
-            <br />
-            {rows.map((row) => (
-                <div key={row[0]}>
-                    {row.map((cell, j) => <span key={j}>{cell} </span>)}
-                    <button onClick={onDelete(row[0])}>Delete</button>
-                    {row[row.length - 1] === 'cached' ? (
-                        <button onClick={onSync()}>Sync</button>
-                    ) : null}
-                </div>
-            ))}
-            <b>Cache</b>
-            {cacheRows.map((row) => (
-                <div key={row[0]}>
-                    {row.map((cell, j) => <span key={j}>{cell} </span>)}
-                    <button onClick={onDelete(row[0])}>Delete</button>
-                    {row[row.length - 1] === 'cached' ? (
-                        <button onClick={onSync()}>Sync</button>
-                    ) : null}
-                </div>
-            ))}
+            <table>
+                <thead>
+                </thead>
+                <tbody>
+                    {rows.map((row) => (
+
+                        <div key={row[0]}>
+                            {row.map((cell, j) => <span key={j}>{cell} </span>)}
+                            <button onClick={onDelete(row[0])}>Delete</button>
+                        </div>
+                    ))}
+                </tbody>
+            </table>
             <br />
             <form onSubmit={loading(onSubmit)}>
                 <input disabled={!table} value={insert} onChange={e => setInsert(e.target.value)} />

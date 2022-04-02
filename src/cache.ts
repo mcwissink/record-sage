@@ -1,4 +1,4 @@
-import { getTableMetadata, Schema } from "./records";
+import { Schema } from "./records";
 
 export enum JournalAction {
     Insert = 'insert',
@@ -27,7 +27,7 @@ class Database {
 
     private ensure<T>(value?: T) {
         if (!value) {
-            throw new Error('Cache has not been initialized');
+            throw new Error('database has not been initialized');
         }
         return value;
     }
@@ -126,7 +126,7 @@ export class Cache {
 
     private ensure<T>(value?: T) {
         if (!value) {
-            throw new Error('Cache has not been initialized');
+            throw new Error('cache has not been initialized');
         }
         return value;
     }
@@ -142,7 +142,7 @@ export class Cache {
     connect = async (schema: Schema) => {
         this.schema = schema;
         await this.db.connect(async (db) => {
-            schema.forEach(({ table }) => {
+            Object.keys(schema).forEach((table) => {
                 db.createObjectStore(table, { keyPath: 'id' });
             });
         });
@@ -196,7 +196,7 @@ export class Cache {
     }
 
     private convertRowArray = (table: string, row: Array<string>): Record<string, any> => {
-        const { columns } = getTableMetadata(this.schema, table);
+        const { columns } = this.schema[table];
         return columns.reduce<Record<string, string>>((rowObject, column, index) => {
             rowObject[column] = row[index];
             return rowObject;

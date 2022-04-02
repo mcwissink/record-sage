@@ -4,7 +4,7 @@ import { schema } from '../../schema';
 import { useLoading } from '../../use-loading';
 
 export const Setup: React.VFC = () => {
-    const { connect } = useRecords();
+    const { setup } = useRecords();
     const { isLoading, loading } = useLoading();
     const [spreadsheetId, setSpreadsheetId] = useState('');
 
@@ -13,7 +13,7 @@ export const Setup: React.VFC = () => {
             <div>Link to an existing spreadsheet</div>
             <form onSubmit={e => {
                 e.preventDefault();
-                connect({ schema, provider: { spreadsheetId } });
+                setup({ schema, provider: { spreadsheetId } });
             }}>
                 <label>
                     Spreadsheet ID:{' '}
@@ -24,7 +24,7 @@ export const Setup: React.VFC = () => {
             <hr />
             <button
                 disabled={isLoading}
-                onClick={loading(() => connect({ schema }))}
+                onClick={loading(() => setup({ schema }))}
             >
                 Create
             </button>
