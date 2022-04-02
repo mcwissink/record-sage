@@ -15,6 +15,7 @@ export const ManageRecords: React.VFC = () => {
 
     useEffect(() => {
         if (table) {
+            records.get(table).then(console.log);
             records.get(table).then(setRows);
         }
     }, [records, table]);

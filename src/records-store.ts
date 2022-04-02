@@ -11,13 +11,11 @@ export const store = create<{
     isOnline: boolean;
     records: Records;
     setup: (options: RecordsSetupOptions) => Promise<void>;
-    errors: string[];
     disconnect: () => void;
     initialize: () => void;
     login: () => void;
     logout: () => void;
 }>((set, get) => ({
-    errors: [],
     isOnline: navigator.onLine,
     isInitialized: false,
     isAuthenticated: false,

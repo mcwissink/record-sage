@@ -89,7 +89,7 @@ export class Records {
         await online(this.sync)();
     }
 
-    get = async (table: string) => (await this.cache.get(table)).concat(online(this.provider.get, [])(table));
+    get = async (table: string): Promise<string[][]> => (await this.cache.get(table)).concat(await online(this.provider.get, [])(table));
 
     private generateId() {
         return uuid();
