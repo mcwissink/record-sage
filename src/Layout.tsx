@@ -13,14 +13,13 @@ const connectedLinks = [
 
 export const Layout: React.VFC = () => {
     const {
-        isOnline,
         isConnected,
     } = useRecords();
 
     return (
         <>
             <nav className="p-4 flex items-center gap-2 border-solid border-0 border-b">
-                <span><b>[record / sage]</b></span>
+                <span className="whitespace-nowrap"><b>record / sage</b></span>
                 <ul className="contents list-none">
                     {links.concat(isConnected ? connectedLinks : []).map(([to, title]) => (
                         <React.Fragment key={to}>
@@ -29,8 +28,6 @@ export const Layout: React.VFC = () => {
                         </React.Fragment>
                     ))}
                 </ul>
-                <div className="grow" />
-                <span>{isOnline ? 'online' : 'offline'}</span>
             </nav>
             <div className="p-4">
                 <Outlet />

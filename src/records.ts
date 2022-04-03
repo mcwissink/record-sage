@@ -5,6 +5,7 @@ import { online } from './utils/online';
 
 export type Schema<T = any> = Record<string, {
     columns: string[];
+    offline?: true;
     rows?: Array<Array<number | string>>;
     options?: T;
 }>;
@@ -89,7 +90,7 @@ export class Records {
         await online(this.sync)();
     }
 
-    get = async (table: string): Promise<string[][]> => (await this.cache.get(table)).concat(await online(this.provider.get, [])(table));
+    get = async (table: string): Promise<string[][]> => this.cache.get(table);
 
     private generateId() {
         return uuid();
@@ -103,7 +104,6 @@ export class Records {
     sync = async () => {
         window.dispatchEvent(new Event('records:syncing'));
         await this.cache.sync(async (entry) => {
-            console.log(entry);
             try {
                 switch (entry.action) {
                     case JournalAction.Insert:
@@ -118,6 +118,13 @@ export class Records {
                 return false;
             }
         });
+        await Promise.all(Object.entries(this.schema).map(async ([table, { offline }]) => {
+            if (offline) {
+                const rows = await this.provider.get(table);
+                await this.cache.reset(table, rows);
+            }
+        }));
+
         window.dispatchEvent(new Event('records:synced'));
     }
 }

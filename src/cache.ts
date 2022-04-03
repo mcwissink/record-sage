@@ -82,13 +82,19 @@ class Database {
             .delete(id)
     );
 
-    transaction = async <Result>(table: string, cb: (store: IDBObjectStore) => IDBRequest<Result>) => this.resolve<Result>(
-        cb(
-            this.db
-                .transaction(table, 'readwrite')
-                .objectStore(table)
-        )
-    );
+    reset = async (table: string, rows: Record<string, any>[]) => this.transaction(table, (store) => {
+        store.clear();
+        rows.forEach(row => store.add(row))
+    });
+
+    transaction = async (table: string, cb: (store: IDBObjectStore) => void) => {
+        const transaction = this.db.transaction(table, 'readwrite')
+        cb(transaction.objectStore(table));
+        return await new Promise((resolve, reject) => {
+            transaction.addEventListener('complete', resolve);
+            transaction.addEventListener('error', reject);
+        });
+    }
 
     disconnect = () => window.indexedDB.deleteDatabase(this.name);
 }
@@ -149,7 +155,7 @@ export class Cache {
         await this.journal.connect();
     }
 
-    insert = async (table: string, row: Array<string>) => {
+    insert = async (table: string, row: string[]) => {
         await this.db.insert(table, this.convertRowArray(table, row))
         await this.journal.insert({
             payload: row,
@@ -188,12 +194,14 @@ export class Cache {
         }
     }
 
-    disconnect = async () => {
+    disconnect = () => {
         this.db.disconnect();
         this.journal.disconnect();
     }
 
-    private convertRowArray = (table: string, row: Array<string>): Record<string, any> => {
+    reset = async (table: string, rows: string[][]) => this.db.reset(table, rows.map((row) => this.convertRowArray(table, row)));
+
+    private convertRowArray = (table: string, row: string[]): Record<string, any> => {
         const { columns } = this.schema[table];
         return columns.reduce<Record<string, string>>((rowObject, column, index) => {
             rowObject[column] = row[index];
