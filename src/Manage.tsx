@@ -35,7 +35,7 @@ export const Manage: React.VFC = () => {
             loading(records.get)(table).then(setRows);
             resetForm();
         }
-    }, [records, table, resetForm, loading]);
+    }, [records, table, loading]);
 
     useEffect(() => {
         const onSyncing = () => setIsSyncing(true);
@@ -49,7 +49,7 @@ export const Manage: React.VFC = () => {
             window.removeEventListener('records:syncing', onSyncing);
             window.removeEventListener('records:synced', onSynced);
         }
-    }, [records, table, setIsSyncing]);
+    }, []);
 
     const onSubmit = async (form: Form) => {
         await records.insert(table, form.columns.map((column) => column.value));
