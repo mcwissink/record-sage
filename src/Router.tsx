@@ -5,7 +5,7 @@ import { App } from './App';
 import { Manage } from './Manage';
 import { Layout } from './Layout';
 import { Settings } from './Settings';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 export const Router: React.FC = () => {
     const {

@@ -7,9 +7,6 @@ export const App: React.FC = () => {
         isInitialized,
         isAuthenticated,
         isConnected,
-        isOnline,
-        disconnect,
-        logout
     } = useRecords();
 
     return (
