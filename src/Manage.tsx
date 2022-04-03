@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useRecords } from './use-records';
 import { schema } from './schema';
 import { useLoading } from './use-loading';
@@ -26,9 +26,9 @@ export const Manage: React.VFC = () => {
         records,
     } = useRecords();
 
-    const resetForm = () => reset({
+    const resetForm = useCallback(() => reset({
         columns: schema[table].columns.slice(1).map(() => ({ value: '' })),
-    });
+    }), [table, reset]);
 
     useEffect(() => {
         if (table) {
