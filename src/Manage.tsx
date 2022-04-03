@@ -35,7 +35,7 @@ export const Manage: React.VFC = () => {
             loading(records.get)(table).then(setRows);
             resetForm();
         }
-    }, [records, table, loading]);
+    }, [records, table, loading, resetForm]);
 
     useEffect(() => {
         const onSyncing = () => setIsSyncing(true);
