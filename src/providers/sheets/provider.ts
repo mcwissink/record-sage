@@ -120,7 +120,7 @@ export class SheetsProvider extends RecordsProvider {
             };
             const { body } = await this.api.client.sheets.spreadsheets.create({
                 properties: {
-                    title: `Record Sage - ${new Date().toLocaleString()}`
+                    title: `record sage - ${new Date().toLocaleString()}`
                 },
                 sheets: Object.entries(schema).map(([table, { columns, rows }]) => ({
                     properties: {
@@ -165,7 +165,7 @@ export class SheetsProvider extends RecordsProvider {
             spreadsheetId: this.spreadsheetId,
             valueInputOption: 'USER_ENTERED',
             insertDataOption: 'INSERT_ROWS',
-            range: `${table}!${start}:${end}`,
+            range: SheetsProvider.range(table, start, end),
             values: [row],
         });
     }
@@ -200,8 +200,8 @@ export class SheetsProvider extends RecordsProvider {
         const { body } = await this.api.client.sheets.spreadsheets.values.update({
             spreadsheetId: this.spreadsheetId,
             valueInputOption: 'USER_ENTERED',
-            range: `Query!${start}:${end}`,
-            values: [[`=MATCH("${id}", ${table}!${queryStart}:${queryEnd}, 0)`]],
+            range: SheetsProvider.range('query', start, end),
+            values: [[`=MATCH("${id}", '${table}'!${queryStart}:${queryEnd}, 0)`]],
             includeValuesInResponse: true,
         });
         const { updatedData } = JSON.parse(body);
@@ -219,7 +219,7 @@ export class SheetsProvider extends RecordsProvider {
             const { body } = await this.api.client.sheets.spreadsheets.values.get({
 
                 spreadsheetId: this.spreadsheetId,
-                range: `${table}!${start}:${end}`,
+                range: SheetsProvider.range(table, start, end),
             });
             const { values } = JSON.parse(body);
             return values;
@@ -240,7 +240,7 @@ export class SheetsProvider extends RecordsProvider {
         const { body } = await this.api.client.sheets.spreadsheets.values.get({
 
             spreadsheetId: this.spreadsheetId,
-            range: `${table}!${start}:${end}`,
+            range: SheetsProvider.range(table, start, end),
         });
         const { values } = JSON.parse(body);
         return values;
@@ -248,6 +248,7 @@ export class SheetsProvider extends RecordsProvider {
 
     delete = async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
+        console.log(rowIndex);
         if (rowIndex === -1) {
             return;
         }
@@ -267,4 +268,6 @@ export class SheetsProvider extends RecordsProvider {
             ]
         });
     }
+
+    private static range = (table: string, start: string, end: string) => `'${table}'!${start}:${end}`;
 }

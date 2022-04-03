@@ -4,10 +4,11 @@ export const useLoading = () => {
     const [isLoading, setLoading] = useState(false);
     return {
         isLoading,
-        loading: <Args extends any[]>(fn: (...args: Args) => Promise<any>) => async (...args: Args) => {
+        loading: <Result, Args extends any[]>(fn: (...args: Args) => Promise<Result>) => async (...args: Args): Promise<Result> => {
             setLoading(true);
-            await fn(...args);
+            const result = await fn(...args);
             setLoading(false);
+            return result;
         }
     }
 }

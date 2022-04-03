@@ -12,9 +12,9 @@ export const store = create<{
     records: Records;
     setup: (options: RecordsSetupOptions) => Promise<void>;
     disconnect: () => void;
-    initialize: () => void;
-    login: () => void;
-    logout: () => void;
+    initialize: () => Promise<void>;
+    login: () => Promise<void>;
+    logout: () => Promise<void>;
 }>((set, get) => ({
     isOnline: navigator.onLine,
     isInitialized: false,

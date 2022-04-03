@@ -42,21 +42,18 @@ export const RecordEntry: React.VFC = () => {
         name: 'applications',
     });
 
-    const onSubmit: React.FormEventHandler = (e) => {
-        e.preventDefault();
-        handleSubmit(async ({ date, field, crop, acres, applications }) => {
-            await Promise.all(
-                applications.map(async ({ chemical, amount }) =>
-                    records.insert('ChemicalApplication', [
-                        date,
-                        field,
-                        crop,
-                        acres,
-                        chemical,
-                        amount,
-                    ]))
-            );
-        })();
+    const onSubmit = async ({ date, field, crop, acres, applications }: Form) => {
+        await Promise.all(
+            applications.map(async ({ chemical, amount }) =>
+                records.insert('chemical-application', [
+                    date,
+                    field,
+                    crop,
+                    acres,
+                    chemical,
+                    amount,
+                ]))
+        );
     }
 
     useEffect(() => {
@@ -78,7 +75,7 @@ export const RecordEntry: React.VFC = () => {
 
     return (
         <>
-            <form onSubmit={onSubmit}>
+            <form onSubmit={handleSubmit(onSubmit)}>
                 <div
                     className={cn('flex flex-col gap-4', {
                         'hidden': step !== 1
@@ -139,12 +136,11 @@ export const RecordEntry: React.VFC = () => {
                                 amount:{' '}
                                 <input {...register(`applications.${index}.amount`)} />
                             </div>
-                            {formFields.length > 1 ? <button onClick={() => remove(index)}>Remove</button> : null}
-                            <hr />
+                            {formFields.length > 1 ? <button onClick={() => remove(index)}>remove</button> : null}
                         </React.Fragment>
                     ))}
-                    <button type="button" onClick={() => append({})}>Add</button>
-                    <button type="button" onClick={() => setStep(3)}>Next</button>
+                    <button type="button" onClick={() => append({})}>add</button>
+                    <button type="button" onClick={() => setStep(3)}>next</button>
                 </div>
                 <div
                     className={cn('flex flex-col gap-4', {

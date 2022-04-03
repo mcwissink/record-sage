@@ -103,6 +103,7 @@ export class Records {
     sync = async () => {
         window.dispatchEvent(new Event('records:syncing'));
         await this.cache.sync(async (entry) => {
+            console.log(entry);
             try {
                 switch (entry.action) {
                     case JournalAction.Insert:
