@@ -49,7 +49,7 @@ export const Manage: React.VFC = () => {
             window.removeEventListener('records:syncing', onSyncing);
             window.removeEventListener('records:synced', onSynced);
         }
-    }, []);
+    }, [records, table, setRows, setIsSyncing]);
 
     const onSubmit = async (form: Form) => {
         await records.insert(table, form.columns.map((column) => column.value));

@@ -248,7 +248,6 @@ export class SheetsProvider extends RecordsProvider {
 
     delete = async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
-        console.log(rowIndex);
         if (rowIndex === -1) {
             return;
         }
