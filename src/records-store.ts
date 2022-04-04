@@ -41,9 +41,13 @@ export const store = create<{
     login: async () => set({
         isAuthenticated: await get().records.login()
     }),
-    logout: async () => set({
-        isAuthenticated: await get().records.logout()
-    }),
+    logout: async () => {
+        await get().records.disconnect();
+        set({
+            isAuthenticated: await get().records.logout(),
+            isConnected: await get().records.isConnected(),
+        })
+    },
 }));
 
 const setOnline = () => store.setState({ isOnline: navigator.onLine });

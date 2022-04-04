@@ -18,7 +18,7 @@ export const Layout: React.VFC = () => {
 
     return (
         <>
-            <nav className="p-4 flex items-center gap-2 border-solid border-0 border-b">
+            <nav className="overflow-hidden p-4 flex items-center gap-2 border-solid border-0 border-b">
                 <span className="whitespace-nowrap"><b>record / sage</b></span>
                 <ul className="contents list-none">
                     {links.concat(isConnected ? connectedLinks : []).map(([to, title]) => (
