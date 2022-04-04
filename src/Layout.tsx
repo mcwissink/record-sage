@@ -17,7 +17,7 @@ export const Layout: React.VFC = () => {
     } = useRecords();
 
     return (
-        <>
+        <div className="flex flex-col min-h-screen">
             <nav className="overflow-hidden p-4 flex items-center gap-2 border-solid border-0 border-b">
                 <span className="whitespace-nowrap"><b>record / sage</b></span>
                 <ul className="contents list-none">
@@ -29,9 +29,12 @@ export const Layout: React.VFC = () => {
                     ))}
                 </ul>
             </nav>
-            <div className="p-4">
+            <div className="p-4 grow">
                 <Outlet />
             </div>
-        </>
+            <footer className="p-4 border-solid border-0 border-t">
+                <div>{process.env.REACT_APP_GIT_SHA}</div>
+            </footer>
+        </div>
     );
 }

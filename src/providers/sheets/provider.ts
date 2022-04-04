@@ -268,5 +268,7 @@ export class SheetsProvider extends RecordsProvider {
         });
     }
 
+    generateCloneUrl = () => `${window.origin}/record-sage/connect/${this.spreadsheetId}`;
+
     private static range = (table: string, start: string, end: string) => `'${table}'!${start}:${end}`;
 }

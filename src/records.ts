@@ -127,6 +127,8 @@ export class Records {
 
         window.dispatchEvent(new Event('records:synced'));
     }
+
+    generateCloneUrl = () => this.provider.generateCloneUrl();
 }
 
 type ProviderSetup = Record<string, any>;
@@ -171,6 +173,9 @@ export class RecordsProvider {
     }
     async delete(_table: string, _id: string): Promise<any> {
         throw new Error(`'delete' is not implemented`);
+    }
+    generateCloneUrl(): string {
+        throw new Error(`'generateCloeUrl' is not implemented`);
     }
 }
 
