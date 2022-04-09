@@ -6,6 +6,8 @@ import { Button } from './ui/Button';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Progress } from './ui/Progress';
 import { Paginated } from './records';
+import { Pagination } from './ui/Pagination';
+import { useSearchParams } from 'react-router-dom';
 
 interface Form {
     columns: Array<{
@@ -14,11 +16,20 @@ interface Form {
 }
 
 export const Manage: React.VFC = () => {
+    const [params] = useSearchParams();
     const [table, setTable] = useState(Object.keys(schema)[0]);
-    const [{ rows }, setData] = useState<Paginated<string[][]>>({
+    const [data, setData] = useState<Paginated<string[][]>>({
         rows: [],
         total: 0,
+        limit: 2,
+        offset: 0,
     });
+    const { rows } = data;
+    const parameters = {
+        limit: Number(params.get('limit') ?? data.limit),
+        offset: Number(params.get('offset') ?? data.offset),
+    }
+
     const [isSyncing, setIsSyncing] = useState(false);
     const { isLoading, loading } = useLoading();
     const { register, control, handleSubmit, reset, formState: { isSubmitting } } = useForm<Form>();
@@ -36,10 +47,10 @@ export const Manage: React.VFC = () => {
 
     useEffect(() => {
         if (table) {
-            loading(records.get)(table, { limit: 2, offset: 1 }).then(setData);
+            loading(records.get)(table, parameters).then(setData);
             resetForm();
         }
-    }, [records, table, loading, resetForm]);
+    }, [records, table, loading, resetForm, params]);
 
     useEffect(() => {
         const onSyncing = () => setIsSyncing(true);
@@ -57,20 +68,20 @@ export const Manage: React.VFC = () => {
 
     const onSubmit = async (form: Form) => {
         await records.insert(table, form.columns.map((column) => column.value));
-        records.get(table).then(setData);
+        records.get(table, parameters).then(setData);
         resetForm();
     };
 
     const onDelete = (row: string[]) => async () => {
         if (window.confirm(`Delete: ${JSON.stringify(row.slice(1))}`)) {
             await records.delete(table, row[0]);
-            records.get(table).then(setData);
+            records.get(table, parameters).then(setData);
         }
     };
 
     return (
-        <div>
-            <div>
+        <div className="flex flex-col gap-4 items-center">
+            <div className="w-full">
                 <select defaultValue={'empty'} onChange={e => setTable(e.target.value)}>
                     {Object.keys(schema).map((table) => (
                         <option key={table} value={table}>{table}</option>
@@ -112,6 +123,9 @@ export const Manage: React.VFC = () => {
                     </tbody>
                 </table>
             </form>
+            <Pagination
+                {...data}
+            />
         </div >
     );
 }

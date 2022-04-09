@@ -22,7 +22,7 @@ export interface Pagination {
     limit: number;
 }
 
-export interface Paginated<Rows> {
+export interface Paginated<Rows> extends Pagination {
     rows: Rows;
     total: number;
 }
@@ -104,11 +104,7 @@ export class Records {
 
     get = log('records:get', async (table: string, parameters?: Pagination): Promise<Paginated<string[][]>> => {
         const cache = await this.cache.get(table);
-        const { rows } = this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, parameters);
-        return {
-            rows,
-            total: 0,
-        }
+        return this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, parameters);
     });
 
     private generateId() {

@@ -170,6 +170,8 @@ export class Cache {
         return {
             rows: records.map(this.convertRowObject),
             total: records.length,
+            limit: records.length,
+            offset: 0,
         }
     }
 

@@ -234,11 +234,15 @@ export class SheetsProvider extends RecordsProvider {
             return {
                 rows: values,
                 total: rowCount,
+                limit,
+                offset,
             };
         } else {
             return {
                 rows: [],
                 total: 0,
+                limit: 0,
+                offset: 0,
             }
         }
     });
