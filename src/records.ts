@@ -121,14 +121,13 @@ export class Records {
     sync = log('records:sync', async () => {
         window.dispatchEvent(new Event('records:syncing'));
         await this.cache.sync(async (entry) => {
-            alert('syncing ' + JSON.stringify(entry));
             try {
                 switch (entry.action) {
                     case JournalAction.Insert:
-                        await this.provider.insert(entry.table, entry.payload);
+                        await log(`sync:inserting:${entry.id.slice(0, 5)}`, this.provider.insert)(entry.table, entry.payload);
                         break;
                     case JournalAction.Delete:
-                        await this.provider.delete(entry.table, entry.payload);
+                        await log(`sync:inserting:${entry.id.slice(0, 5)}`, this.provider.delete)(entry.table, entry.payload);
                         break;
                 }
                 return true;
@@ -137,7 +136,6 @@ export class Records {
             }
         });
         await Promise.all(Object.entries(this.schema).map(async ([table, { offline }]) => {
-            alert('resetting table ' + table);
             const { rows } = await this.provider.get(
                 table,
                 offline ? null : { limit: 5, offset: 0 }
