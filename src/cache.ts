@@ -167,11 +167,16 @@ export class Cache {
 
     get = async (table: string, parameters?: Pagination): Promise<Paginated<string[][]>> => {
         const records = await this.db.get(table);
+        const limit = parameters ? parameters.limit : records.length
+        const offset = parameters ? parameters.offset : 0;
+        console.log({ length: records.length, offset, limit });
         return {
-            rows: records.map(this.convertRowObject),
+            rows: records
+                .slice(offset, offset + limit)
+                .map(this.convertRowObject),
             total: records.length,
-            limit: records.length,
-            offset: 0,
+            limit,
+            offset,
         }
     }
 

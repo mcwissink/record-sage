@@ -103,7 +103,7 @@ export class Records {
     });
 
     get = log('records:get', async (table: string, parameters?: Pagination): Promise<Paginated<string[][]>> => {
-        const cache = await this.cache.get(table);
+        const cache = await this.cache.get(table, parameters);
         return this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, parameters);
     });
 
