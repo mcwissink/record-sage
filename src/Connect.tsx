@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { schema } from "./schema";
 import { Progress } from "./ui/Progress";
-import { useRecords } from "./use-records";
+import { useRecords } from "./records-store";
 
 export const Connect: React.VFC = () => {
     const { spreadsheetId } = useParams();

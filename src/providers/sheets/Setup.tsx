@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRecords } from '../../use-records';
+import { useRecords } from '../../records-store';
 import { schema } from '../../schema';
 import { useForm } from 'react-hook-form';
 import { Button } from '../../ui/Button';

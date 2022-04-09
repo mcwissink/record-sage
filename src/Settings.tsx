@@ -1,4 +1,4 @@
-import { useRecords } from "./use-records";
+import { useRecords } from "./records-store";
 import QRCode from 'qrcode-svg';
 
 export const Settings: React.VFC = () => {

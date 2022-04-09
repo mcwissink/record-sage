@@ -1,4 +1,5 @@
 import { RecordsProvider, Schema, RecordsSetupOptions } from '../../records';
+import { log } from '../../log-store';
 import gapi from './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {
@@ -7,7 +8,7 @@ export class SheetsProvider extends RecordsProvider {
     private _schema?: Schema;
     private _spreadsheetId?: string;
 
-    private initialize = async () => {
+    private initialize = log('provider:initialize', async () => {
         if (!this.initialized) {
             this.initialized = new Promise((resolve, reject) => {
                 this.api.load('client:auth2', async () => {
@@ -27,7 +28,7 @@ export class SheetsProvider extends RecordsProvider {
             });
         }
         return this.initialized;
-    }
+    });
 
     private ensure<T>(value?: T) {
         if (!value) {
@@ -74,6 +75,8 @@ export class SheetsProvider extends RecordsProvider {
         localStorage.setItem(SheetsProvider.SPREADSHEET_ID_KEY, spreadsheetId);
     }
 
+    isSetup = () => Boolean(localStorage.getItem(SheetsProvider.SPREADSHEET_ID_KEY));
+
     isAuthenticated = async () => {
         await this.initialize();
         return this.api.auth2.getAuthInstance().isSignedIn.get();
@@ -84,26 +87,26 @@ export class SheetsProvider extends RecordsProvider {
         return Boolean(localStorage.getItem(SheetsProvider.SPREADSHEET_ID_KEY));
     }
 
-    async login() {
+    login = log('provider:login', async () => {
         await this.api.auth2.getAuthInstance().signIn()
         return this.isAuthenticated();
-    }
+    });
 
-    async logout() {
+    logout = log('provider:logout', async () => {
         await this.api.auth2.getAuthInstance().signOut();
         return this.isAuthenticated();
-    }
+    });
 
-    async disconnect() {
+    disconnect = log('provider:disconnect', async () => {
         localStorage.removeItem(SheetsProvider.SPREADSHEET_ID_KEY);
-    }
+    });
 
-    connect = async (schema: Schema) => {
+    connect = log('provider:connect', async (schema: Schema) => {
         await this.initialize();
         this.schema = schema;
-    }
+    });
 
-    async setup(options: RecordsSetupOptions<{ spreadsheetId: string }>) {
+    setup = log('provider:setup', async (options: RecordsSetupOptions<{ spreadsheetId: string }>) => {
         await this.initialize();
         this.schema = options.schema;
         if (options.provider) {
@@ -118,7 +121,7 @@ export class SheetsProvider extends RecordsProvider {
                     columns: [''],
                 }
             };
-            const { body } = await this.api.client.sheets.spreadsheets.create({
+            const { body } = await log('gapi:create', this.api.client.sheets.spreadsheets.create)({
                 properties: {
                     title: `record sage - ${new Date().toLocaleString()}`
                 },
@@ -156,9 +159,9 @@ export class SheetsProvider extends RecordsProvider {
             const { spreadsheetId } = JSON.parse(body);
             this.spreadsheetId = spreadsheetId;
         }
-    }
+    });
 
-    insert = async (table: string, row: Array<string>) => {
+    insert = log('provider:insert', async (table: string, row: Array<string>) => {
         const start = this.getA1Notation(1, 0);
         const end = this.getA1Notation(1, row.length - 1);
         await this.api.client.sheets.spreadsheets.values.append({
@@ -168,7 +171,7 @@ export class SheetsProvider extends RecordsProvider {
             range: SheetsProvider.range(table, start, end),
             values: [row],
         });
-    }
+    });
 
     private getRowCount = async (table: string) => {
         const { body } = await this.api.client.sheets.spreadsheets.get({
@@ -209,7 +212,7 @@ export class SheetsProvider extends RecordsProvider {
         return isNaN(index) ? -1 : index;
     }
 
-    get = async (table: string): Promise<string[][]> => {
+    get = log('provider:get', async (table: string): Promise<string[][]> => {
         const rowCount = await this.getRowCount(table);
         if (rowCount > 0) {
             const { columns } = this.schema[table];
@@ -226,9 +229,9 @@ export class SheetsProvider extends RecordsProvider {
         } else {
             return [];
         }
-    }
+    });
 
-    find = async (table: string, id: string) => {
+    find = log('provider:find', async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
         if (rowIndex === -1) {
             return null;
@@ -244,9 +247,9 @@ export class SheetsProvider extends RecordsProvider {
         });
         const { values } = JSON.parse(body);
         return values;
-    }
+    });
 
-    delete = async (table: string, id: string) => {
+    delete = log('provider:delete', async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
         if (rowIndex === -1) {
             return;
@@ -266,7 +269,7 @@ export class SheetsProvider extends RecordsProvider {
                 }
             ]
         });
-    }
+    });
 
     generateCloneUrl = () => `${window.origin}/record-sage/connect/${this.spreadsheetId}`;
 

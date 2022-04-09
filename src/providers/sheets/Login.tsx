@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRecords } from '../../use-records';
+import { useRecords } from '../../records-store';
 
 export const Login: React.VFC = () => {
     const { login } = useRecords();

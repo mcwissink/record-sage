@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRecords, Setup, Login } from './use-records';
+import { useRecords, Setup, Login } from './records-store';
 import { RecordEntry } from './RecordEntry';
 
 export const App: React.FC = () => {

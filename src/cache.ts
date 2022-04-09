@@ -1,4 +1,5 @@
 import { Schema } from "./records";
+import { log } from './log-store';
 
 export enum JournalAction {
     Insert = 'insert',
@@ -54,38 +55,38 @@ class Database {
         });
     }
 
-    insert = async (table: string, row: Record<string, any>) => this.resolve(
+    insert = log('db:insert', async (table: string, row: Record<string, any>) => this.resolve(
         this.db
             .transaction(table, 'readwrite')
             .objectStore(table)
             .add(row)
-    );
+    ));
 
-    get = async (table: string): Promise<any[]> => this.resolve(
+    get = log('db:get', async (table: string): Promise<any[]> => this.resolve(
         this.db
             .transaction(table, 'readonly')
             .objectStore(table)
             .getAll()
-    );
+    ));
 
-    find = async (table: string, id: string,): Promise<Record<string, any>> => this.resolve(
+    find = log('db:find', async (table: string, id: string,): Promise<Record<string, any>> => this.resolve(
         this.db
             .transaction(table, 'readonly')
             .objectStore(table)
             .get(id)
-    );
+    ));
 
-    delete = async (table: string, id: string | number) => this.resolve(
+    delete = log('db:delete', async (table: string, id: string | number) => this.resolve(
         this.db
             .transaction(table, 'readwrite')
             .objectStore(table)
             .delete(id)
-    );
+    ));
 
-    reset = async (table: string, rows: Record<string, any>[]) => this.transaction(table, (store) => {
+    reset = log('db:reset', async (table: string, rows: Record<string, any>[]) => this.transaction(table, (store) => {
         store.clear();
         rows.forEach(row => store.add(row))
-    });
+    }));
 
     transaction = async (table: string, cb: (store: IDBObjectStore) => void) => {
         const transaction = this.db.transaction(table, 'readwrite')
@@ -111,14 +112,14 @@ class Journal {
 
     delete = (id: string | number) => this.db.delete(Journal.ENTRY, id);
 
-    connect = async () => {
+    connect = log('journal:connect', async () => {
         await this.db.connect((db) => {
             db.createObjectStore(Journal.ENTRY, {
                 keyPath: 'id',
                 autoIncrement: true,
             })
         });
-    }
+    });
 
     disconnect = () => this.db.disconnect();
 }
@@ -145,7 +146,7 @@ export class Cache {
         this._schema = schema;
     }
 
-    connect = async (schema: Schema) => {
+    connect = log('cache:connect', async (schema: Schema) => {
         this.schema = schema;
         await this.db.connect(async (db) => {
             Object.keys(schema).forEach((table) => {
@@ -153,7 +154,7 @@ export class Cache {
             });
         });
         await this.journal.connect();
-    }
+    });
 
     insert = async (table: string, row: string[]) => {
         await this.db.insert(table, this.convertRowArray(table, row))

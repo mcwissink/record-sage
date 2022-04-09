@@ -1,10 +1,11 @@
-import create from 'zustand/vanilla';
+import vanilla from 'zustand/vanilla';
+import create from 'zustand';
 import { Records, RecordsSetupOptions } from './records';
 import * as Providers from './providers';
 
 export const records = new Records(Providers.Sheets);
 
-export const store = create<{
+export const recordsStore = vanilla<{
     isInitialized: boolean;
     isAuthenticated: boolean;
     isConnected: boolean;
@@ -50,7 +51,11 @@ export const store = create<{
     },
 }));
 
-const setOnline = () => store.setState({ isOnline: navigator.onLine });
+const setOnline = () => recordsStore.setState({ isOnline: navigator.onLine });
+
+export const useRecords = create(recordsStore);
+export const Setup = records.Setup;
+export const Login = records.Login;
 
 window.addEventListener('online', setOnline);
 window.addEventListener('offline', setOnline);

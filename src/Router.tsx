@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useRecords } from './use-records';
+import { useRecords } from './records-store';
 import { Route, Routes } from 'react-router';
 import { App } from './App';
 import { Manage } from './Manage';

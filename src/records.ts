@@ -1,4 +1,5 @@
 import React from 'react';
+import { log } from './log-store';
 import { v4 as uuid } from 'uuid';
 import { Cache, JournalAction } from './cache';
 import { online } from './utils/online';
@@ -56,13 +57,13 @@ export class Records {
         localStorage.setItem(Records.SCHEMA_KEY, JSON.stringify(schema));
     }
 
-    isSetup = () => localStorage.getItem(Records.SCHEMA_KEY);
+    isSetup = () => localStorage.getItem(Records.SCHEMA_KEY) && this.provider.isSetup();
 
     isAuthenticated = () => online(this.provider.isAuthenticated, true)();
 
     isConnected = () => online(this.provider.isConnected, true)();
 
-    setup = async (options: RecordsSetupOptions) => {
+    setup = log('records:setup', async (options: RecordsSetupOptions) => {
         if (options.schema) {
             this.schema = options.schema;
         }
@@ -70,38 +71,42 @@ export class Records {
 
         await this.cache.connect(schema);
         await this.provider.setup({ ...options, schema });
-    }
+        await this.sync();
+    });
 
-    disconnect = async () => {
+    disconnect = log('records:disconnect', async () => {
         localStorage.removeItem(Records.SCHEMA_KEY);
         await this.provider.disconnect();
-        await this.cache.disconnect();
-    }
+        this.cache.disconnect();
+    });
 
-    login = () => this.provider.login();
+    login = log('records:login', () => this.provider.login());
 
-    logout = async () => {
+    logout = log('records:logout', async () => {
         await this.disconnect();
         return await this.provider.logout();
-    };
+    });
 
-    insert = async (table: string, row: Array<string>) => {
+    insert = log('records:insert', async (table: string, row: Array<string>) => {
         await this.cache.insert(table, [this.generateId()].concat(row));
         await online(this.sync)();
-    }
+    });
 
-    get = async (table: string): Promise<string[][]> => this.schema[table].offline ? this.cache.get(table) : online(this.provider.get, [])(table);
+    get = log('records:get', async (table: string): Promise<string[][]> => {
+        const cache = this.cache.get(table);
+        return this.schema[table].offline ? cache : online(this.provider.get, cache)(table);
+    });
 
     private generateId() {
         return uuid();
     }
 
-    delete = async (table: string, id: string) => {
+    delete = log('records:delete', async (table: string, id: string) => {
         await this.cache.delete(table, id);
         await online(this.sync)();
-    }
+    });
 
-    sync = async () => {
+    sync = log('records:sync', async () => {
         window.dispatchEvent(new Event('records:syncing'));
         await this.cache.sync(async (entry) => {
             try {
@@ -126,7 +131,7 @@ export class Records {
         }));
 
         window.dispatchEvent(new Event('records:synced'));
-    }
+    })
 
     generateCloneUrl = () => this.provider.generateCloneUrl();
 }
@@ -147,6 +152,9 @@ export class RecordsProvider {
     async disconnect(): Promise<void> {
         throw new Error(`'disconnect' is not implemented`);
     }
+    isSetup() {
+        return false;
+    };
     async isAuthenticated() {
         return false;
     };

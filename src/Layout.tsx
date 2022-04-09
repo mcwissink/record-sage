@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Outlet } from "react-router-dom";
-import { useRecords } from './use-records';
+import { useLog } from './log-store';
+import { useRecords } from './records-store';
 
 const links = [
     ['/', 'home'],
@@ -15,6 +16,10 @@ export const Layout: React.VFC = () => {
     const {
         isConnected,
     } = useRecords();
+    const {
+        message,
+    } = useLog();
+
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -32,8 +37,9 @@ export const Layout: React.VFC = () => {
             <div className="p-4 grow">
                 <Outlet />
             </div>
-            <footer className="p-4 border-solid border-0 border-t">
+            <footer className="flex justify-between p-4 border-solid border-0 border-t">
                 <div>{process.env.REACT_APP_GIT_SHA}</div>
+                <div>{message}</div>
             </footer>
         </div>
     );

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import cn from 'classnames';
 import { format } from 'date-fns';
-import { useRecords } from './use-records';
+import { useRecords } from './records-store';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
 

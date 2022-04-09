@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { useRecords } from './use-records';
+import { useRecords } from './records-store';
 import { schema } from './schema';
 import { useLoading } from './use-loading';
 import { Button } from './ui/Button';
