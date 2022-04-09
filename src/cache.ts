@@ -97,7 +97,10 @@ class Database {
         });
     }
 
-    disconnect = log('db:disconnect', async () => this.resolve(window.indexedDB.deleteDatabase(this.name)));
+    disconnect = log('db:disconnect', async () => {
+        this.db.close();
+        return this.resolve(window.indexedDB.deleteDatabase(this.name));
+    });
 }
 
 class Journal {
@@ -193,17 +196,21 @@ export class Cache {
         })
     }
 
-    sync = async (cb: (entry: JournalEntry) => Promise<boolean>) => {
+    sync = async (cb: (entry: JournalEntry) => Promise<boolean>): Promise<string[]> => {
         if (!this.syncing) {
+            const updates = new Set<string>();
             this.syncing = true;
             const entries = await this.journal.get();
             for (const entry of entries) {
                 if (await cb(entry)) {
+                    updates.add(entry.table);
                     await this.journal.delete(entry.id);
                 }
             }
             this.syncing = false;
+            return Array.from(updates);
         }
+        return [];
     }
 
     disconnect = async () => {

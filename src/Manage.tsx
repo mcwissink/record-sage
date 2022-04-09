@@ -93,7 +93,7 @@ export const Manage: React.VFC = () => {
                 </select>
             </div>
             <Progress active={isSyncing || isLoading} />
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
                 <table className="grid gap-4" style={{ gridTemplateColumns: `repeat(${schema[table].columns.length + 1}, minmax(0, max-content))` }}>
                     <thead className="contents">
                         <tr className="contents">

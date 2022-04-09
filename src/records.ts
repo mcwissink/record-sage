@@ -120,22 +120,24 @@ export class Records {
 
     sync = log('records:sync', async () => {
         window.dispatchEvent(new Event('records:syncing'));
-        await this.cache.sync(async (entry) => {
+        const updates = await this.cache.sync(async (entry) => {
             try {
                 switch (entry.action) {
                     case JournalAction.Insert:
-                        await log(`sync:inserting:${entry.id.slice(0, 5)}`, this.provider.insert)(entry.table, entry.payload);
+                        await log(`sync:inserting:${entry.id}`, this.provider.insert)(entry.table, entry.payload);
                         break;
                     case JournalAction.Delete:
-                        await log(`sync:inserting:${entry.id.slice(0, 5)}`, this.provider.delete)(entry.table, entry.payload);
+                        await log(`sync:deleting:${entry.id}`, this.provider.delete)(entry.table, entry.payload);
                         break;
                 }
                 return true;
-            } catch {
+            } catch (error) {
+                console.error(error);
                 return false;
             }
         });
-        await Promise.all(Object.entries(this.schema).map(async ([table, { offline }]) => {
+        await Promise.all(updates.map(async (table) => {
+            const { offline } = this.schema[table];
             const { rows } = await this.provider.get(
                 table,
                 offline ? null : { limit: 5, offset: 0 }
@@ -144,7 +146,7 @@ export class Records {
         }));
 
         window.dispatchEvent(new Event('records:synced'));
-    })
+    });
 
     generateCloneUrl = () => this.provider.generateCloneUrl();
 }
