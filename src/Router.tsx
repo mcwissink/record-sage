@@ -6,7 +6,6 @@ import { Manage } from './Manage';
 import { Layout } from './Layout';
 import { Settings } from './Settings';
 import { Navigate } from 'react-router-dom';
-import { Connect } from './Connect';
 
 export const Router: React.FC = () => {
     const {
@@ -22,7 +21,6 @@ export const Router: React.FC = () => {
         <Routes>
             <Route path="/" element={<Layout />}>
                 <Route path="" element={<App />} />
-                <Route path="connect/:spreadsheetId" element={<Connect />} />
                 {isConnected ? (
                     <>
                         <Route path="manage" element={<Manage />} />

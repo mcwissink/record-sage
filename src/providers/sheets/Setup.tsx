@@ -1,19 +1,29 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useRecords } from '../../records-store';
 import { schema } from '../../schema';
 import { useForm } from 'react-hook-form';
 import { Button } from '../../ui/Button';
 import { Progress } from '../../ui/Progress';
 import { useLoading } from '../../use-loading';
+import { useSearchParams } from 'react-router-dom';
 
 interface Form {
     spreadsheetId: string;
 }
 
 export const Setup: React.VFC = () => {
+    const [params] = useSearchParams();
+    const spreadsheetId = params.get('spreadsheetId');
+
     const { setup } = useRecords();
     const { isLoading, loading } = useLoading();
-    const { register, handleSubmit, formState: { isSubmitting } } = useForm<Form>();
+    const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<Form>();
+
+    useEffect(() => {
+        if (spreadsheetId) {
+            reset({ spreadsheetId });
+        }
+    }, [reset, spreadsheetId]);
 
     return (
         <>

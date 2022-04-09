@@ -22,6 +22,8 @@ export interface Pagination {
     limit: number;
 }
 
+export type GetOptions = Pagination | null;
+
 export interface Paginated<Rows> extends Pagination {
     rows: Rows;
     total: number;
@@ -87,7 +89,7 @@ export class Records {
     disconnect = log('records:disconnect', async () => {
         localStorage.removeItem(Records.SCHEMA_KEY);
         await this.provider.disconnect();
-        this.cache.disconnect();
+        await this.cache.disconnect();
     });
 
     login = log('records:login', () => this.provider.login());
@@ -102,9 +104,9 @@ export class Records {
         await online(this.sync)();
     });
 
-    get = log('records:get', async (table: string, parameters?: Pagination): Promise<Paginated<string[][]>> => {
-        const cache = await this.cache.get(table, parameters);
-        return this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, parameters);
+    get = log('records:get', async (table: string, options?: GetOptions): Promise<Paginated<string[][]>> => {
+        const cache = await this.cache.get(table, options);
+        return this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, options);
     });
 
     private generateId() {
@@ -119,6 +121,7 @@ export class Records {
     sync = log('records:sync', async () => {
         window.dispatchEvent(new Event('records:syncing'));
         await this.cache.sync(async (entry) => {
+            alert('syncing ' + JSON.stringify(entry));
             try {
                 switch (entry.action) {
                     case JournalAction.Insert:
@@ -134,10 +137,12 @@ export class Records {
             }
         });
         await Promise.all(Object.entries(this.schema).map(async ([table, { offline }]) => {
-            if (offline) {
-                const { rows } = await this.provider.get(table);
-                await this.cache.reset(table, rows);
-            }
+            alert('resetting table ' + table);
+            const { rows } = await this.provider.get(
+                table,
+                offline ? null : { limit: 5, offset: 0 }
+            );
+            await this.cache.reset(table, rows);
         }));
 
         window.dispatchEvent(new Event('records:synced'));
@@ -180,7 +185,7 @@ export class RecordsProvider {
     async insert(_table: string, _row: Array<string>) {
         throw new Error(`'insert' is not implemented`);
     }
-    async get(_table: string, _parameters?: Pagination): Promise<Paginated<string[][]>> {
+    async get(_table: string, _options?: GetOptions): Promise<Paginated<string[][]>> {
         throw new Error(`'get' is not implemented`);
     }
     async find(_table: string, _id: string): Promise<any> {

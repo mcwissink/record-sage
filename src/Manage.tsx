@@ -7,7 +7,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { Progress } from './ui/Progress';
 import { Paginated } from './records';
 import { Pagination } from './ui/Pagination';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface Form {
     columns: Array<{
@@ -17,17 +17,18 @@ interface Form {
 
 export const Manage: React.VFC = () => {
     const [params] = useSearchParams();
+    const navigate = useNavigate();
     const [table, setTable] = useState(Object.keys(schema)[0]);
     const [data, setData] = useState<Paginated<string[][]>>({
         rows: [],
         total: 0,
-        limit: 2,
+        limit: 0,
         offset: 0,
     });
     const { rows } = data;
     const parameters = {
-        limit: Number(params.get('limit') ?? data.limit),
-        offset: Number(params.get('offset') ?? data.offset),
+        limit: Number(params.get('limit') ?? 5),
+        offset: Number(params.get('offset') ?? 0),
     }
 
     const [isSyncing, setIsSyncing] = useState(false);
@@ -82,7 +83,10 @@ export const Manage: React.VFC = () => {
     return (
         <div className="flex flex-col gap-4 items-center">
             <div className="w-full">
-                <select defaultValue={'empty'} onChange={e => setTable(e.target.value)}>
+                <select defaultValue={'empty'} onChange={e => {
+                    setTable(e.target.value)
+                    navigate('', { replace: true });
+                }}>
                     {Object.keys(schema).map((table) => (
                         <option key={table} value={table}>{table}</option>
                     ))}

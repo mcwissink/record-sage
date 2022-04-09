@@ -1,4 +1,4 @@
-import { Paginated, Pagination, Schema } from "./records";
+import { Paginated, GetOptions, Schema } from "./records";
 import { log } from './log-store';
 
 export enum JournalAction {
@@ -97,7 +97,7 @@ class Database {
         });
     }
 
-    disconnect = () => window.indexedDB.deleteDatabase(this.name);
+    disconnect = log('db:disconnect', async () => this.resolve(window.indexedDB.deleteDatabase(this.name)));
 }
 
 class Journal {
@@ -121,10 +121,11 @@ class Journal {
         });
     });
 
-    disconnect = () => this.db.disconnect();
+    disconnect = async () => this.db.disconnect();
 }
 
 export class Cache {
+    private syncing = false;
     private _schema?: DatabaseSchema;
     constructor(
         private db = new Database('record-sage'),
@@ -165,10 +166,10 @@ export class Cache {
         });
     }
 
-    get = async (table: string, parameters?: Pagination): Promise<Paginated<string[][]>> => {
+    get = async (table: string, options?: GetOptions): Promise<Paginated<string[][]>> => {
         const records = await this.db.get(table);
-        const limit = parameters ? parameters.limit : records.length
-        const offset = parameters ? parameters.offset : 0;
+        const limit = options ? options.limit : records.length
+        const offset = options ? options.offset : 0;
         return {
             rows: records
                 .slice(offset, offset + limit)
@@ -193,20 +194,21 @@ export class Cache {
     }
 
     sync = async (cb: (entry: JournalEntry) => Promise<boolean>) => {
-        const entries = await this.journal.get();
-        for (const entry of entries) {
-            if (await cb(entry)) {
-                await this.journal.delete(entry.id);
-                if (entry.action === 'insert') {
-                    await this.db.delete(entry.table, entry.payload[0]);
+        if (!this.syncing) {
+            this.syncing = true;
+            const entries = await this.journal.get();
+            for (const entry of entries) {
+                if (await cb(entry)) {
+                    await this.journal.delete(entry.id);
                 }
             }
+            this.syncing = false;
         }
     }
 
-    disconnect = () => {
-        this.db.disconnect();
-        this.journal.disconnect();
+    disconnect = async () => {
+        await this.db.disconnect();
+        await this.journal.disconnect();
     }
 
     reset = async (table: string, rows: string[][]) => this.db.reset(table, rows.map((row) => this.convertRowArray(table, row)));

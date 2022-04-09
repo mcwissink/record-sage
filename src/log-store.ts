@@ -10,6 +10,7 @@ export const logStore = vanilla<{
 
 export const log = <Result = any, Args extends any[] = any[]>(message: string, fn: (...args: Args) => Promise<Result>) => async (...args: Args): Promise<Result> => {
     logStore.setState({ message: `${message}:starting` })
+    console.log(message);
     const result = await fn(...args);
     logStore.setState({ message: `${message}:done` })
     return result;

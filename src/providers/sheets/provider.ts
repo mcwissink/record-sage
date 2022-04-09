@@ -1,4 +1,4 @@
-import { RecordsProvider, Schema, RecordsSetupOptions, Pagination, Paginated } from '../../records';
+import { RecordsProvider, Schema, RecordsSetupOptions, GetOptions, Paginated } from '../../records';
 import { log } from '../../log-store';
 import gapi from './../../gapi';
 
@@ -212,13 +212,13 @@ export class SheetsProvider extends RecordsProvider {
         return isNaN(index) ? -1 : index;
     }
 
-    get = log('provider:get', async (table: string, parameters: Pagination): Promise<Paginated<string[][]>> => {
+    get = log('provider:get', async (table: string, options: GetOptions): Promise<Paginated<string[][]>> => {
         const rowCount = await this.getRowCount(table);
         if (rowCount > 0) {
             const { columns } = this.schema[table];
-            const offset = parameters ? parameters.offset : 0;
+            const offset = options ? options.offset : 0;
             const endRowIndex = rowCount + SheetsProvider.METADATA_OFFSET - offset;
-            const limit = parameters ? parameters.limit : endRowIndex - 1;
+            const limit = options ? options.limit : endRowIndex - 1;
             // A1 Grid notation limits are included
             // A1:Z1 will fetch 1 row
             // A1:Z2 will fetch 2 rows
@@ -287,7 +287,7 @@ export class SheetsProvider extends RecordsProvider {
         });
     });
 
-    generateCloneUrl = () => `${window.origin}/record-sage/connect/${this.spreadsheetId}`;
+    generateCloneUrl = () => `${window.origin}/record-sage/spreadsheetId=${this.spreadsheetId}`;
 
     private static range = (table: string, start: string, end: string) => `'${table}'!${start}:${end}`;
 }
