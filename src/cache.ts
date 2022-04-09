@@ -1,4 +1,4 @@
-import { Schema } from "./records";
+import { Paginated, Pagination, Schema } from "./records";
 import { log } from './log-store';
 
 export enum JournalAction {
@@ -165,9 +165,12 @@ export class Cache {
         });
     }
 
-    get = async (table: string): Promise<string[][]> => {
+    get = async (table: string, parameters?: Pagination): Promise<Paginated<string[][]>> => {
         const records = await this.db.get(table);
-        return records.map(this.convertRowObject);
+        return {
+            rows: records.map(this.convertRowObject),
+            total: records.length,
+        }
     }
 
     find = async (table: string, id: string): Promise<string[]> => this.convertRowObject(

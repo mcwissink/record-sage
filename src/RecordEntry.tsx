@@ -68,9 +68,9 @@ export const RecordEntry: React.VFC = () => {
                 records.get('crop'),
                 records.get('chemical'),
             ]);
-            setFields(fields.map(([_id, name]: any) => name));
-            setCrops(crops.map(([_id, name]: any) => name));
-            setChemicals(chemicals.map(([_id, name]: any) => name));
+            setFields(fields.rows.map(([_id, name]: any) => name));
+            setCrops(crops.rows.map(([_id, name]: any) => name));
+            setChemicals(chemicals.rows.map(([_id, name]: any) => name));
         })();
     }, [records, setFields, setCrops]);
 

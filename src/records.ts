@@ -17,6 +17,16 @@ export type Provider = {
     Setup: React.VFC;
 }
 
+export interface Pagination {
+    offset: number;
+    limit: number;
+}
+
+export interface Paginated<Rows> {
+    rows: Rows;
+    total: number;
+}
+
 export class Records {
     private static SCHEMA_KEY = 'schema';
     public Setup: React.VFC;
@@ -92,9 +102,13 @@ export class Records {
         await online(this.sync)();
     });
 
-    get = log('records:get', async (table: string): Promise<string[][]> => {
-        const cache = this.cache.get(table);
-        return this.schema[table].offline ? cache : online(this.provider.get, cache)(table);
+    get = log('records:get', async (table: string, parameters?: Pagination): Promise<Paginated<string[][]>> => {
+        const cache = await this.cache.get(table);
+        const { rows } = this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, parameters);
+        return {
+            rows,
+            total: 0,
+        }
     });
 
     private generateId() {
@@ -125,7 +139,7 @@ export class Records {
         });
         await Promise.all(Object.entries(this.schema).map(async ([table, { offline }]) => {
             if (offline) {
-                const rows = await this.provider.get(table);
+                const { rows } = await this.provider.get(table);
                 await this.cache.reset(table, rows);
             }
         }));
@@ -170,7 +184,7 @@ export class RecordsProvider {
     async insert(_table: string, _row: Array<string>) {
         throw new Error(`'insert' is not implemented`);
     }
-    async get(_table: string): Promise<any> {
+    async get(_table: string, _parameters?: Pagination): Promise<Paginated<string[][]>> {
         throw new Error(`'get' is not implemented`);
     }
     async find(_table: string, _id: string): Promise<any> {

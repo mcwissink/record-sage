@@ -5,6 +5,7 @@ import { useLoading } from './use-loading';
 import { Button } from './ui/Button';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Progress } from './ui/Progress';
+import { Paginated } from './records';
 
 interface Form {
     columns: Array<{
@@ -14,7 +15,10 @@ interface Form {
 
 export const Manage: React.VFC = () => {
     const [table, setTable] = useState(Object.keys(schema)[0]);
-    const [rows, setRows] = useState<string[][]>([]);
+    const [{ rows }, setData] = useState<Paginated<string[][]>>({
+        rows: [],
+        total: 0,
+    });
     const [isSyncing, setIsSyncing] = useState(false);
     const { isLoading, loading } = useLoading();
     const { register, control, handleSubmit, reset, formState: { isSubmitting } } = useForm<Form>();
@@ -32,7 +36,7 @@ export const Manage: React.VFC = () => {
 
     useEffect(() => {
         if (table) {
-            loading(records.get)(table).then(setRows);
+            loading(records.get)(table, { limit: 2, offset: 1 }).then(setData);
             resetForm();
         }
     }, [records, table, loading, resetForm]);
@@ -41,7 +45,7 @@ export const Manage: React.VFC = () => {
         const onSyncing = () => setIsSyncing(true);
         const onSynced = () => {
             setIsSyncing(false);
-            records.get(table).then(setRows);
+            records.get(table).then(setData);
         };
         window.addEventListener('records:syncing', onSyncing);
         window.addEventListener('records:synced', onSynced);
@@ -49,18 +53,18 @@ export const Manage: React.VFC = () => {
             window.removeEventListener('records:syncing', onSyncing);
             window.removeEventListener('records:synced', onSynced);
         }
-    }, [records, table, setRows, setIsSyncing]);
+    }, [records, table, setData, setIsSyncing]);
 
     const onSubmit = async (form: Form) => {
         await records.insert(table, form.columns.map((column) => column.value));
-        records.get(table).then(setRows);
+        records.get(table).then(setData);
         resetForm();
     };
 
     const onDelete = (row: string[]) => async () => {
         if (window.confirm(`Delete: ${JSON.stringify(row.slice(1))}`)) {
             await records.delete(table, row[0]);
-            records.get(table).then(setRows);
+            records.get(table).then(setData);
         }
     };
 

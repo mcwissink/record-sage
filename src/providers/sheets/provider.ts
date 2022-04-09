@@ -1,8 +1,9 @@
-import { RecordsProvider, Schema, RecordsSetupOptions } from '../../records';
+import { RecordsProvider, Schema, RecordsSetupOptions, Pagination, Paginated } from '../../records';
 import { log } from '../../log-store';
 import gapi from './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {
+    private static METADATA_OFFSET = 1;
     private initialized?: Promise<void>;
     private api: any = gapi;
     private _schema?: Schema;
@@ -129,7 +130,7 @@ export class SheetsProvider extends RecordsProvider {
                     properties: {
                         title: table,
                         gridProperties: {
-                            rowCount: (rows?.length ?? 0) + 1,
+                            rowCount: (rows?.length ?? 0) + SheetsProvider.METADATA_OFFSET,
                             columnCount: columns.length,
                         },
                     },
@@ -180,8 +181,7 @@ export class SheetsProvider extends RecordsProvider {
         });
         const { sheets } = JSON.parse(body);
         const { properties } = sheets.find((sheet: any) => sheet.properties.title === table);
-        // Subtract 1 to account for header row
-        return properties.gridProperties.rowCount - 1;
+        return properties.gridProperties.rowCount - SheetsProvider.METADATA_OFFSET;
     }
 
     private getSheetId = async (table: string): Promise<string> => {
@@ -212,12 +212,18 @@ export class SheetsProvider extends RecordsProvider {
         return isNaN(index) ? -1 : index;
     }
 
-    get = log('provider:get', async (table: string): Promise<string[][]> => {
+    get = log('provider:get', async (table: string, parameters: Pagination): Promise<Paginated<string[][]>> => {
         const rowCount = await this.getRowCount(table);
         if (rowCount > 0) {
             const { columns } = this.schema[table];
-            const start = this.getA1Notation(1, 0);
-            const end = this.getA1Notation(1 + rowCount, columns.length - 1);
+            const offset = parameters ? parameters.offset : 0;
+            const endRowIndex = rowCount + SheetsProvider.METADATA_OFFSET - offset;
+            const limit = parameters ? parameters.limit : endRowIndex - 1;
+            // A1 Grid notation limits are included
+            // A1:Z1 will fetch 1 row
+            // A1:Z2 will fetch 2 rows
+            const end = this.getA1Notation(endRowIndex - 1, columns.length - 1);
+            const start = this.getA1Notation(Math.max(endRowIndex - limit, SheetsProvider.METADATA_OFFSET), 0);
 
             const { body } = await this.api.client.sheets.spreadsheets.values.get({
 
@@ -225,9 +231,15 @@ export class SheetsProvider extends RecordsProvider {
                 range: SheetsProvider.range(table, start, end),
             });
             const { values } = JSON.parse(body);
-            return values;
+            return {
+                rows: values,
+                total: rowCount,
+            };
         } else {
-            return [];
+            return {
+                rows: [],
+                total: 0,
+            }
         }
     });
 
