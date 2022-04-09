@@ -169,7 +169,6 @@ export class Cache {
         const records = await this.db.get(table);
         const limit = parameters ? parameters.limit : records.length
         const offset = parameters ? parameters.offset : 0;
-        console.log({ length: records.length, offset, limit });
         return {
             rows: records
                 .slice(offset, offset + limit)
