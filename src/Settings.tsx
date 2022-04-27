@@ -1,13 +1,22 @@
 import { useRecords } from "./records-store";
-import QRCode from 'qrcode-svg';
+import QRCode from 'qrcode';
+import { useEffect, useState } from "react";
 
 export const Settings: React.VFC = () => {
+    const [qrCode, setQrCode] = useState('');
     const {
         disconnect,
         logout,
         records,
     } = useRecords();
+
     const cloneUrl = records.generateCloneUrl();
+    console.log(qrCode);
+
+    useEffect(() => {
+        QRCode.toDataURL(cloneUrl).then(setQrCode);
+    }, [setQrCode, records]);
+
     return (
         <div className="flex flex-col gap-4">
             <div className="flex gap-4">
@@ -19,12 +28,7 @@ export const Settings: React.VFC = () => {
                 <img
                     className="block"
                     alt={cloneUrl}
-                    src={'data:image/svg+xml;base64,' + btoa(new QRCode({
-                        content: cloneUrl,
-                        ecl: 'H',
-                        // Use padding from outside instead to enable alignment with text.
-                        padding: 0,
-                    }).svg())}
+                    src={qrCode}
                 />
             </div>
         </div>
