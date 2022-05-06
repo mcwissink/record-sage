@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRecords, Setup, Login } from './records-store';
-import { RecordEntry } from './RecordEntry';
+import { RecordList } from './RecordList';
 
 export const App: React.FC = () => {
     const {
@@ -14,7 +14,7 @@ export const App: React.FC = () => {
             {isInitialized ? (
                 isAuthenticated ? (
                     isConnected ? (
-                        <RecordEntry />
+                        <RecordList />
                     ) : <Setup />
                 ) : <Login />
             ) : <div>Loading...</div>}

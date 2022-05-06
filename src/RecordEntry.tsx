@@ -4,6 +4,8 @@ import { format } from 'date-fns';
 import { useRecords } from './records-store';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { Select } from './ui/Select';
 
 interface Form {
     date: string;
@@ -75,7 +77,7 @@ export const RecordEntry: React.VFC = () => {
     }, [records, setFields, setCrops]);
 
     return (
-        <>
+        <div>
             <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 grid-cols-2">
                 <div
                     className={cn('contents', {
@@ -83,37 +85,39 @@ export const RecordEntry: React.VFC = () => {
                     })}
                 >
                     <div className="col-span-2">
-                        date:{' '}
-                        <input type="date" {...register('date')} />
+                        <div>
+                            date:{' '}
+                            <Input type="date" {...register('date')} />
+                        </div>
                     </div>
                     <div className="col-span-2">
                         field:{' '}
-                        <select defaultValue="" {...register('field')}>
+                        <Select defaultValue="" {...register('field')}>
                             <option disabled value="">
                                 Select a field
                             </option>
                             {fields.map(field => (
                                 <option key={field} value={field}>{field}</option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
                     <div className="col-span-2">
                         crop:{' '}
-                        <select defaultValue="" {...register('crop')}>
+                        <Select defaultValue="" {...register('crop')}>
                             <option disabled value="">
                                 Select a crop
                             </option>
                             {crops.map(crop => (
                                 <option key={crop} value={crop}>{crop}</option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
                     <div className="col-span-2">
                         acres:{' '}
-                        <input type="number" {...register('acres')} />
+                        <Input type="number" {...register('acres')} />
                     </div>
                     <hr className="w-full col-span-2" />
-                    <button className="col-start-2" type="button" onClick={() => setStep(2)}>next</button>
+                    <Button className="col-start-2" type="button" onClick={() => setStep(2)}>next</Button>
                 </div>
                 <div
                     className={cn('contents', {
@@ -122,28 +126,29 @@ export const RecordEntry: React.VFC = () => {
                 >
                     {formFields.map((item, index) => (
                         <React.Fragment key={item.id}>
+                            {index ? <hr className="w-full col-span-2" /> : null}
                             <div className="col-span-2">
                                 chemical:{' '}
-                                <select defaultValue="" {...register(`applications.${index}.chemical`)}>
+                                <Select defaultValue="" {...register(`applications.${index}.chemical`)}>
                                     <option disabled value="">
                                         Select a chemical
                                     </option>
                                     {chemicals.map(chemical => (
                                         <option key={chemical} value={chemical}>{chemical}</option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                             <div className="col-span-2">
                                 amount:{' '}
-                                <input {...register(`applications.${index}.amount`)} />
+                                <Input type="number" {...register(`applications.${index}.amount`)} />
                             </div>
-                            {formFields.length > 1 ? <button onClick={() => remove(index)}>remove</button> : null}
+                            {formFields.length > 1 ? <Button onClick={() => remove(index)}>remove</Button> : null}
                         </React.Fragment>
                     ))}
-                    <button className="col-start-1" type="button" onClick={() => append({})}>add</button>
+                    <Button className="col-start-1 col-span-2" type="button" onClick={() => append({})}>add</Button>
                     <hr className="w-full col-span-2" />
-                    <button type="button" onClick={() => setStep(1)}>back</button>
-                    <button type="button" onClick={() => setStep(3)}>next</button>
+                    <Button type="button" onClick={() => setStep(1)}>back</Button>
+                    <Button type="button" onClick={() => setStep(3)}>next</Button>
                 </div>
                 <div
                     className={cn('contents', {
@@ -165,6 +170,6 @@ export const RecordEntry: React.VFC = () => {
                     <Button type="submit" loading={isSubmitting}>compete</Button>
                 </div>
             </form>
-        </>
+        </div>
     )
 }

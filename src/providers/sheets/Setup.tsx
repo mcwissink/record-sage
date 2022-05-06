@@ -6,6 +6,7 @@ import { Button } from '../../ui/Button';
 import { Progress } from '../../ui/Progress';
 import { useLoading } from '../../use-loading';
 import { useSearchParams } from 'react-router-dom';
+import { Input } from '../../ui/Input';
 
 interface Form {
     spreadsheetId: string;
@@ -34,7 +35,7 @@ export const Setup: React.VFC = () => {
                     <form onSubmit={handleSubmit(({ spreadsheetId }) =>
                         loading(setup)({ schema, provider: { spreadsheetId } })
                     )}>
-                        <input {...register('spreadsheetId')} />
+                        <Input {...register('spreadsheetId')} />
                         <Button loading={isSubmitting}>Connect</Button>
                     </form>
                 </li>

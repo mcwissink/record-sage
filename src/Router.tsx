@@ -5,7 +5,8 @@ import { App } from './App';
 import { Manage } from './Manage';
 import { Layout } from './Layout';
 import { Settings } from './Settings';
-import { Navigate } from 'react-router-dom';
+import { RecordEntry } from './RecordEntry';
+import { RecordView } from './RecordView';
 
 export const Router: React.FC = () => {
     const {
@@ -20,14 +21,19 @@ export const Router: React.FC = () => {
     return (
         <Routes>
             <Route path="/" element={<Layout />}>
-                <Route path="" element={<App />} />
+                <Route index element={<App />} />
                 {isConnected ? (
                     <>
+                        <Route path="records">
+                            <Route index element={<div>Records</div>} />
+                            <Route path="add" element={<RecordEntry />} />
+                            <Route path=":recordId" element={<RecordView />} />
+                        </Route>
                         <Route path="manage" element={<Manage />} />
                         <Route path="settings" element={<Settings />} />
                     </>
-                ) : null}
-                <Route path="*" element={<Navigate replace to="/" />} />
+                ) : <Route path="*" element={<div>Loading</div>} />}
+                <Route path="*" element={<div>Not Found</div>} />
             </Route>
         </Routes>
     );

@@ -232,7 +232,7 @@ export class SheetsProvider extends RecordsProvider {
             });
             const { values } = JSON.parse(body);
             return {
-                rows: values,
+                rows: values.reverse(),
                 total: rowCount,
                 limit,
                 offset,
@@ -253,7 +253,7 @@ export class SheetsProvider extends RecordsProvider {
             return null;
         }
         const { columns } = this.schema[table];
-        const start = this.getA1Notation(1, 0);
+        const start = this.getA1Notation(rowIndex, 0);
         const end = this.getA1Notation(rowIndex, columns.length - 1);
 
         const { body } = await this.api.client.sheets.spreadsheets.values.get({
@@ -262,7 +262,7 @@ export class SheetsProvider extends RecordsProvider {
             range: SheetsProvider.range(table, start, end),
         });
         const { values } = JSON.parse(body);
-        return values;
+        return values[0];
     });
 
     delete = log('provider:delete', async (table: string, id: string) => {

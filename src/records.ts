@@ -20,6 +20,7 @@ export type Provider = {
 export interface Pagination {
     offset: number;
     limit: number;
+    id?: string;
 }
 
 export type GetOptions = Pagination | null;
@@ -83,7 +84,7 @@ export class Records {
 
         await this.cache.connect(schema);
         await this.provider.setup({ ...options, schema });
-        await this.sync();
+        await Promise.all(Object.keys(this.schema).map(this.syncTable));
     });
 
     disconnect = log('records:disconnect', async () => {
@@ -109,6 +110,10 @@ export class Records {
         return this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, options);
     });
 
+    find = log('records:find', async (table: string, id: string): Promise<string[]> => {
+        return await online(this.provider.find)(table, id);
+    });
+
     private generateId() {
         return uuid();
     }
@@ -117,6 +122,15 @@ export class Records {
         await this.cache.delete(table, id);
         await online(this.sync)();
     });
+
+    private syncTable = async (table: string) => {
+        const { offline } = this.schema[table];
+        const { rows } = await this.provider.get(
+            table,
+            offline ? null : { limit: 5, offset: 0 }
+        );
+        await this.cache.reset(table, rows);
+    }
 
     sync = log('records:sync', async () => {
         window.dispatchEvent(new Event('records:syncing'));
@@ -136,14 +150,7 @@ export class Records {
                 return false;
             }
         });
-        await Promise.all(updates.map(async (table) => {
-            const { offline } = this.schema[table];
-            const { rows } = await this.provider.get(
-                table,
-                offline ? null : { limit: 5, offset: 0 }
-            );
-            await this.cache.reset(table, rows);
-        }));
+        await Promise.all(updates.map(this.syncTable));
 
         window.dispatchEvent(new Event('records:synced'));
     });
