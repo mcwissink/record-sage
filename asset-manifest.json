@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/record-sage/static/css/main.40c51b68.css",
-    "main.js": "/record-sage/static/js/main.6b1acc85.js",
+    "main.css": "/record-sage/static/css/main.d18e85bc.css",
+    "main.js": "/record-sage/static/js/main.ba5ccf65.js",
     "index.html": "/record-sage/index.html",
-    "main.40c51b68.css.map": "/record-sage/static/css/main.40c51b68.css.map",
-    "main.6b1acc85.js.map": "/record-sage/static/js/main.6b1acc85.js.map"
+    "main.d18e85bc.css.map": "/record-sage/static/css/main.d18e85bc.css.map",
+    "main.ba5ccf65.js.map": "/record-sage/static/js/main.ba5ccf65.js.map"
   },
   "entrypoints": [
-    "static/css/main.40c51b68.css",
-    "static/js/main.6b1acc85.js"
+    "static/css/main.d18e85bc.css",
+    "static/js/main.ba5ccf65.js"
   ]
 }
