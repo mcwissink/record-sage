@@ -6,6 +6,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
+import { useNavigate } from 'react-router-dom';
 
 interface Form {
     date: string;
@@ -19,6 +20,7 @@ interface Form {
 }
 
 export const RecordEntry: React.VFC = () => {
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [fields, setFields] = useState<string[]>([]);
     const [crops, setCrops] = useState<string[]>([]);
@@ -46,7 +48,7 @@ export const RecordEntry: React.VFC = () => {
         name: 'applications',
     });
 
-    const onSubmit = async ({ date, field, crop, acres, applications }: Form) => {
+    const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications }: Form) => {
         for (const { chemical, amount } of applications) {
             await records.insert('chemical-application', [
                 date,
@@ -57,7 +59,8 @@ export const RecordEntry: React.VFC = () => {
                 amount,
             ]);
         }
-    }
+        navigate('/');
+    });
 
     useEffect(() => {
         (async () => {
@@ -78,7 +81,7 @@ export const RecordEntry: React.VFC = () => {
 
     return (
         <div>
-            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 grid-cols-2">
+            <form onSubmit={onSubmit} className="grid gap-4 grid-cols-2">
                 <div
                     className={cn('contents', {
                         'hidden': step !== 1
@@ -167,7 +170,7 @@ export const RecordEntry: React.VFC = () => {
                     </div>
                     <hr className="w-full col-span-2" />
                     <button type="button" onClick={() => setStep(1)}>back</button>
-                    <Button type="submit" loading={isSubmitting}>compete</Button>
+                    <Button type="submit" loading={isSubmitting}>complete</Button>
                 </div>
             </form>
         </div>

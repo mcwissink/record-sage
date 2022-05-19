@@ -7,7 +7,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { Progress } from './ui/Progress';
 import { Paginated } from './records';
 import { Pagination } from './ui/Pagination';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 interface Form {
     columns: Array<{
@@ -105,10 +105,9 @@ export const Manage: React.VFC = () => {
                     </thead>
                     <tbody className="contents">
                         {rows.map((row) => (
-
-                            <tr key={row[0]} className="contents">
+                            <tr key={row[0]} className="contents cursor-pointer" onClick={() => navigate(`/records/${row[0]}`)}>
                                 {row.map((cell, j) =>
-                                    <td key={j}>{cell} </td>
+                                    <td key={j} className="truncate">{cell}</td>
                                 )}
                                 <td>
                                     <Button type="button" onClick={onDelete(row)}>delete</Button>

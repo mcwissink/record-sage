@@ -13,6 +13,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+a.no-underline, a:visited, a:hover, a:active {
+  color: inherit;
+  text-decoration-line: none;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
