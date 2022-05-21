@@ -105,7 +105,7 @@ export const Manage: React.VFC = () => {
                     </thead>
                     <tbody className="contents">
                         {rows.map((row) => (
-                            <tr key={row[0]} className="contents cursor-pointer" onClick={() => navigate(`/records/${row[0]}`)}>
+                            <tr key={row[0]} className="contents cursor-pointer">
                                 {row.map((cell, j) =>
                                     <td key={j} className="truncate">{cell}</td>
                                 )}

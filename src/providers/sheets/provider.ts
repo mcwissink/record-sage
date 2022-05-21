@@ -250,7 +250,7 @@ export class SheetsProvider extends RecordsProvider {
     find = log('provider:find', async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
         if (rowIndex === -1) {
-            return null;
+            return [];
         }
         const { columns } = this.schema[table];
         const start = this.getA1Notation(rowIndex, 0);

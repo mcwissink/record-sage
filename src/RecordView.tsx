@@ -3,17 +3,19 @@ import { useParams } from "react-router-dom";
 import { useRecords } from "./records-store";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
+import { useLoading } from "./use-loading";
 
 const TABLE = 'chemical-application';
 
 export const RecordView: React.VFC = () => {
     const navigate = useNavigate();
+    const { isLoading, loading } = useLoading();
     const { recordId } = useParams();
     const [data, setData] = useState<string[]>([]);
     const { records } = useRecords();
     useEffect(() => {
         if (recordId) {
-            records.find(TABLE, recordId).then(setData);
+            loading(records.find)(TABLE, recordId).then(setData);
         }
     }, [records, recordId]);
 
@@ -21,8 +23,12 @@ export const RecordView: React.VFC = () => {
         return <div>Missing ID</div>
     }
 
-    if (!data.length) {
+    if (isLoading) {
         return <div>Loading</div>
+    }
+
+    if (!data.length) {
+        return <div>404</div>
     }
 
     const onDelete = (row: string[]) => async () => {

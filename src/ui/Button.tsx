@@ -3,7 +3,7 @@ import { useLoading } from '../use-loading';
 import cn from 'classnames';
 
 export const Button: React.FC<React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & {
-    onClick?: () => Promise<void> | void;
+    onClick?: (e: React.SyntheticEvent) => Promise<void> | void;
     loading?: boolean;
 }> = ({
     children,

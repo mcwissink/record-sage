@@ -111,7 +111,7 @@ export class Records {
     });
 
     find = log('records:find', async (table: string, id: string): Promise<string[]> => {
-        return await online(this.provider.find)(table, id);
+        return await online(this.provider.find, [])(table, id);
     });
 
     private generateId() {
@@ -195,7 +195,7 @@ export class RecordsProvider {
     async get(_table: string, _options?: GetOptions): Promise<Paginated<string[][]>> {
         throw new Error(`'get' is not implemented`);
     }
-    async find(_table: string, _id: string): Promise<any> {
+    async find(_table: string, _id: string): Promise<string[]> {
         throw new Error(`'find' is not implemented`);
     }
     async update(_table: string): Promise<any> {
