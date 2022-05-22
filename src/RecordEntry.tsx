@@ -150,16 +150,16 @@ export const RecordEntry: React.VFC = () => {
                     className={cn('contents', {
                     })}
                 >
-                    <Title>Confirmation</Title>
+                    <Title>Confirmation - {formData.date}</Title>
                     <div className="col-span-2">
-                        <span>{formData.date} {formData.field} {formData.crop} {formData.acres}</span>
-                        <ul>
-                            {formData.applications.map((application, index) => (
-                                <li key={index}>
-                                    <span>{application.chemical} {application.amount}</span>
-                                </li>
-                            ))}
-                        </ul>
+                        {formData.applications.map((application, index) => (
+                            <Card key={index} className="flex items-center">
+                                <div className="grow flex flex-col gap-2">
+                                    <span><b>Location: </b>{formData.field} - {formData.crop} - {formData.acres}</span>
+                                    <span><b>Chemical: </b>{application.chemical} - {application.amount}</span>
+                                </div>
+                            </Card>
+                        ))}
                     </div>
                     <hr className="w-full col-span-full" />
                     <Button
