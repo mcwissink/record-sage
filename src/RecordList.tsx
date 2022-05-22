@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Paginated } from "./records"
 import { useRecords } from "./records-store";
 import { Button } from "./ui/Button";
+import { Card } from "./ui/Card";
 import { Progress } from "./ui/Progress";
 import { useLoading } from "./use-loading";
 
@@ -37,21 +38,18 @@ export const RecordList: React.VFC = () => {
                     return (
                         <React.Fragment key={id}>
                             {date === previousDate ? null : (
-                                <div className="flex items-center">
+                                <div className="flex items-end">
                                     <b className="grow">{date}</b>
                                     <Button>duplicate</Button>
                                 </div>
                             )}
                             <Link to={`/records/${id}`} className="no-underline">
-                                <div className="flex items-center shadow p-4 bg-gray-100 rounded">
+                                <Card className="flex items-center">
                                     <div className="grow flex flex-col gap-2">
                                         <span><b>Location: </b>{field} - {crop} - {acres}</span>
                                         <span><b>Chemical: </b>{chemical} - {amount}</span>
                                     </div>
-                                    <div className="text-4xl">
-                                        &rsaquo;
-                                    </div>
-                                </div>
+                                </Card>
                             </Link>
                         </React.Fragment>
                     );

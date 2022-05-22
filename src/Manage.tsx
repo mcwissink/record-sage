@@ -5,9 +5,10 @@ import { useLoading } from './use-loading';
 import { Button } from './ui/Button';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Progress } from './ui/Progress';
+import { Select } from './ui/Select';
 import { Paginated } from './records';
 import { Pagination } from './ui/Pagination';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface Form {
     columns: Array<{
@@ -83,17 +84,17 @@ export const Manage: React.VFC = () => {
     return (
         <div className="flex flex-col gap-4 items-center">
             <div className="w-full">
-                <select defaultValue={'empty'} onChange={e => {
+                <Select defaultValue={'empty'} className="w-full md:w-auto" onChange={e => {
                     setTable(e.target.value)
                     navigate('', { replace: true });
                 }}>
                     {Object.keys(schema).map((table) => (
                         <option key={table} value={table}>{table}</option>
                     ))}
-                </select>
+                </Select>
             </div>
             <Progress active={isSyncing || isLoading} />
-            <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
+            <form className="w-max max-w-full" onSubmit={handleSubmit(onSubmit)}>
                 <table className="grid gap-4" style={{ gridTemplateColumns: `repeat(${schema[table].columns.length + 1}, minmax(0, max-content))` }}>
                     <thead className="contents">
                         <tr className="contents">
@@ -106,8 +107,8 @@ export const Manage: React.VFC = () => {
                     <tbody className="contents">
                         {rows.map((row) => (
                             <tr key={row[0]} className="contents cursor-pointer">
-                                {row.map((cell, j) =>
-                                    <td key={j} className="truncate">{cell}</td>
+                                {row.map((cell, index) =>
+                                    <td key={index} className="truncate">{cell}</td>
                                 )}
                                 <td>
                                     <Button type="button" onClick={onDelete(row)}>delete</Button>

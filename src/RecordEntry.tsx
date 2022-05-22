@@ -7,6 +7,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { useNavigate } from 'react-router-dom';
+import { Card } from './ui/Card';
 
 interface Form {
     date: string;
@@ -21,7 +22,6 @@ interface Form {
 
 export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
-    const [step, setStep] = useState(1);
     const [fields, setFields] = useState<string[]>([]);
     const [crops, setCrops] = useState<string[]>([]);
     const [chemicals, setChemicals] = useState<string[]>([]);
@@ -81,21 +81,17 @@ export const RecordEntry: React.VFC = () => {
 
     return (
         <div>
-            <form onSubmit={onSubmit} className="grid gap-4 grid-cols-2">
+            <form onSubmit={onSubmit} className="grid gap-4 grid-cols-2 md:grid-cols-4">
                 <div
                     className={cn('contents', {
-                        'hidden': step !== 1
                     })}
                 >
-                    <div className="col-span-2">
-                        <div>
-                            date:{' '}
-                            <Input type="date" {...register('date')} />
-                        </div>
-                    </div>
-                    <div className="col-span-2">
-                        field:{' '}
-                        <Select defaultValue="" {...register('field')}>
+                    <Title>Application</Title>
+                    <FormEntry className="col-span-2" label="date">
+                        <Input type="date" className="w-full" {...register('date')} />
+                    </FormEntry>
+                    <FormEntry className="col-span-2" label="field">
+                        <Select defaultValue="" className="w-full" {...register('field')}>
                             <option disabled value="">
                                 Select a field
                             </option>
@@ -103,10 +99,9 @@ export const RecordEntry: React.VFC = () => {
                                 <option key={field} value={field}>{field}</option>
                             ))}
                         </Select>
-                    </div>
-                    <div className="col-span-2">
-                        crop:{' '}
-                        <Select defaultValue="" {...register('crop')}>
+                    </FormEntry>
+                    <FormEntry className="col-span-2" label="crop">
+                        <Select defaultValue="" className="w-full" {...register('crop')}>
                             <option disabled value="">
                                 Select a crop
                             </option>
@@ -114,25 +109,24 @@ export const RecordEntry: React.VFC = () => {
                                 <option key={crop} value={crop}>{crop}</option>
                             ))}
                         </Select>
-                    </div>
-                    <div className="col-span-2">
-                        acres:{' '}
-                        <Input type="number" {...register('acres')} />
-                    </div>
-                    <hr className="w-full col-span-2" />
-                    <Button className="col-start-2" type="button" onClick={() => setStep(2)}>next</Button>
+                    </FormEntry>
+                    <FormEntry className="col-span-2" label="acres">
+                        <Input type="number" className="w-full" {...register('acres')} />
+                    </FormEntry>
+                    <hr className="w-full col-span-full" />
                 </div>
                 <div
                     className={cn('contents', {
-                        'hidden': step !== 2
                     })}
                 >
+                    <Title>Chemicals</Title>
                     {formFields.map((item, index) => (
-                        <React.Fragment key={item.id}>
-                            {index ? <hr className="w-full col-span-2" /> : null}
-                            <div className="col-span-2">
-                                chemical:{' '}
-                                <Select defaultValue="" {...register(`applications.${index}.chemical`)}>
+                        <Card key={item.id} className="col-span-2">
+                            <FormEntry
+                                label="chemical"
+                                action={<Button onClick={() => remove(index)}>remove</Button>}
+                            >
+                                <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemical`)}>
                                     <option disabled value="">
                                         Select a chemical
                                     </option>
@@ -140,25 +134,24 @@ export const RecordEntry: React.VFC = () => {
                                         <option key={chemical} value={chemical}>{chemical}</option>
                                     ))}
                                 </Select>
-                            </div>
-                            <div className="col-span-2">
-                                amount:{' '}
-                                <Input type="number" {...register(`applications.${index}.amount`)} />
-                            </div>
-                            {formFields.length > 1 ? <Button onClick={() => remove(index)}>remove</Button> : null}
-                        </React.Fragment>
+                            </FormEntry>
+                            <FormEntry
+                                label="amount"
+                                className="col-span-2"
+                            >
+                                <Input type="number" className="w-full" {...register(`applications.${index}.amount`)} />
+                            </FormEntry>
+                        </Card>
                     ))}
-                    <Button className="col-start-1 col-span-2" type="button" onClick={() => append({})}>add</Button>
-                    <hr className="w-full col-span-2" />
-                    <Button type="button" onClick={() => setStep(1)}>back</Button>
-                    <Button type="button" onClick={() => setStep(3)}>next</Button>
+                    <Card className="col-span-2 flex items-center justify-center" onClick={() => append({})}>add</Card>
+                    <hr className="w-full col-span-full" />
                 </div>
                 <div
                     className={cn('contents', {
-                        'hidden': step !== 3
                     })}
                 >
-                    <div>
+                    <Title>Confirmation</Title>
+                    <div className="col-span-2">
                         <span>{formData.date} {formData.field} {formData.crop} {formData.acres}</span>
                         <ul>
                             {formData.applications.map((application, index) => (
@@ -168,11 +161,40 @@ export const RecordEntry: React.VFC = () => {
                             ))}
                         </ul>
                     </div>
-                    <hr className="w-full col-span-2" />
-                    <button type="button" onClick={() => setStep(1)}>back</button>
-                    <Button type="submit" loading={isSubmitting}>complete</Button>
+                    <hr className="w-full col-span-full" />
+                    <Button
+                        type="submit"
+                        loading={isSubmitting}
+                        className="col-span-2"
+                    >
+                        complete
+                    </Button>
                 </div>
             </form>
         </div>
     )
 }
+
+export const FormEntry: React.FC<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
+    label: string;
+    action?: React.ReactNode;
+}> = ({
+    children,
+    action,
+    label,
+    ...props
+}) => {
+    return (
+        <div {...props}>
+            <div className="flex justify-between items-end pb-1">
+                {label}:
+                {action ? action : null}
+            </div>
+            {children}
+        </div>
+    );
+};
+
+export const Title: React.FC = (props) => (
+    <b className="col-span-full" {...props} />
+)

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRecords, Setup, Login } from './records-store';
 import { RecordList } from './RecordList';
+import { Progress } from './ui/Progress';
 
 export const App: React.FC = () => {
     const {
@@ -17,7 +18,7 @@ export const App: React.FC = () => {
                         <RecordList />
                     ) : <Setup />
                 ) : <Login />
-            ) : <div>Loading...</div>}
+            ) : <Progress />}
         </div>
     );
 }

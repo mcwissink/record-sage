@@ -4,6 +4,7 @@ import { useRecords } from "./records-store";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
 import { useLoading } from "./use-loading";
+import { Progress } from "./ui/Progress";
 
 const TABLE = 'chemical-application';
 
@@ -24,7 +25,7 @@ export const RecordView: React.VFC = () => {
     }
 
     if (isLoading) {
-        return <div>Loading</div>
+        return <Progress />
     }
 
     if (!data.length) {

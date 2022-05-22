@@ -9,7 +9,7 @@ export const Input = React.forwardRef<HTMLInputElement, Props>(({
 }, ref) => (
     <input
         ref={ref}
-        className={cn('w-full p-1 md:w-auto', className)}
+        className={cn('p-1', className)}
         {...props}
     />
 ));

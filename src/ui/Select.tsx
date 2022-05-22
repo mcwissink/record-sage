@@ -9,7 +9,7 @@ export const Select = React.forwardRef<HTMLSelectElement, Props>(({
 }, ref) => (
     <select
         ref={ref}
-        className={cn('w-full p-1 md:w-auto', className)}
+        className={cn('p-1', className)}
         {...props}
     />
 ));

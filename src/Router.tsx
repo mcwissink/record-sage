@@ -7,6 +7,7 @@ import { Layout } from './Layout';
 import { Settings } from './Settings';
 import { RecordEntry } from './RecordEntry';
 import { RecordView } from './RecordView';
+import { Progress } from './ui/Progress';
 
 export const Router: React.FC = () => {
     const {
@@ -32,7 +33,7 @@ export const Router: React.FC = () => {
                         <Route path="manage" element={<Manage />} />
                         <Route path="settings" element={<Settings />} />
                     </>
-                ) : <Route path="*" element={<div>Loading</div>} />}
+                ) : <Route path="*" element={<Progress />} />}
                 <Route path="*" element={<div>Not Found</div>} />
             </Route>
         </Routes>
