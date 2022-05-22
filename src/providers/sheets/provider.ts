@@ -1,5 +1,5 @@
 import { RecordsProvider, Schema, RecordsSetupOptions, GetOptions, Paginated } from '../../records';
-import { log } from '../../log-store';
+import { log } from '../../app-store';
 import gapi from './../../gapi';
 
 export class SheetsProvider extends RecordsProvider {

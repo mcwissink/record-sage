@@ -1,5 +1,5 @@
 import { Paginated, GetOptions, Schema } from "./records";
-import { log } from './log-store';
+import { log } from './app-store';
 
 export enum JournalAction {
     Insert = 'insert',

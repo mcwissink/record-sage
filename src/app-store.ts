@@ -1,18 +1,18 @@
 import vanilla from 'zustand/vanilla';
 import create from 'zustand';
 
-export const logStore = vanilla<{
-    message: string;
+export const appStore = vanilla<{
+    logMessage: string;
 }>(() => ({
-    message: '',
+    logMessage: '',
 }));
 
 
 export const log = <Result = any, Args extends any[] = any[]>(message: string, fn: (...args: Args) => Promise<Result>) => async (...args: Args): Promise<Result> => {
-    logStore.setState({ message: `${message}:starting` })
+    appStore.setState({ logMessage: `${message}:starting` })
     const result = await fn(...args);
-    logStore.setState({ message: `${message}:done` })
+    appStore.setState({ logMessage: `${message}:done` })
     return result;
 }
 
-export const useLog = create(logStore);
+export const useLog = create(appStore);

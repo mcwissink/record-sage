@@ -1,5 +1,5 @@
 import React from 'react';
-import { log } from './log-store';
+import { log } from './app-store';
 import { v4 as uuid } from 'uuid';
 import { Cache, JournalAction } from './cache';
 import { online } from './utils/online';
