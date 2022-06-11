@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet } from "react-router-dom";
-import { useLog } from './app-store';
+import { useAppStore } from './app-store';
 import { useRecords } from './records-store';
 
 const links = [
@@ -18,17 +18,16 @@ export const Layout: React.VFC = () => {
     } = useRecords();
     const {
         logMessage,
-    } = useLog();
+    } = useAppStore();
 
 
     return (
         <div className="flex flex-col min-h-screen">
             <nav className="overflow-hidden p-4 flex items-center gap-2 border-solid border-0 border-b">
-                <span className="whitespace-nowrap"><b>record / sage</b></span>
                 <ul className="contents list-none">
-                    {links.concat(isConnected ? connectedLinks : []).map(([to, title]) => (
+                    {links.concat(isConnected ? connectedLinks : []).map(([to, title], index) => (
                         <React.Fragment key={to}>
-                            <li>|</li>
+                            {index ? <li>|</li> : null}
                             <li><Link to={to}>{title}</Link></li>
                         </React.Fragment>
                     ))}

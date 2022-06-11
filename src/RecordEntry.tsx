@@ -6,7 +6,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from './ui/Card';
 
 interface Form {
@@ -20,8 +20,14 @@ interface Form {
     }>
 }
 
+const DEFAULT_FIELDS = {
+    date: format(new Date(), 'yyyy-MM-dd'),
+    applications: [{}],
+}
+const isRows = (state: any): state is { rows: string[][] } => state && 'rows' in state;
 export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
+    const { state, pathname } = useLocation();
     const [fields, setFields] = useState<string[]>([]);
     const [crops, setCrops] = useState<string[]>([]);
     const [chemicals, setChemicals] = useState<string[]>([]);
@@ -29,7 +35,9 @@ export const RecordEntry: React.VFC = () => {
         records,
     } = useRecords();
 
+    console.log(state);
     const {
+        reset,
         register,
         control,
         handleSubmit,
@@ -37,11 +45,20 @@ export const RecordEntry: React.VFC = () => {
         formState: { isSubmitting }
     } = useForm<Form>({
         defaultValues: {
-            date: format(new Date(), 'yyyy-MM-dd'),
-            applications: [{}],
+            ...DEFAULT_FIELDS,
+            ...(isRows(state) ? {
+                field: state.rows[0][2],
+                crop: state.rows[0][3],
+                acres: state.rows[0][4],
+                applications: [{
+                    chemical: state.rows[0][5],
+                    amount: state.rows[0][6],
+                }],
+            } : {})
         }
     });
     const formData = watch();
+    console.log(formData);
 
     const { fields: formFields, append, remove } = useFieldArray({
         control,
@@ -86,7 +103,23 @@ export const RecordEntry: React.VFC = () => {
                     className={cn('contents', {
                     })}
                 >
-                    <Title>Application</Title>
+                    <div className="flex justify-between col-span-full">
+                        <b>Application</b>
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                reset(
+                                    {
+                                        ...DEFAULT_FIELDS,
+                                        acres: '',
+                                        field: '',
+                                        crop: '',
+                                    },
+                                );
+                            }}>
+                            reset
+                        </Button>
+                    </div>
                     <FormEntry className="col-span-2" label="date">
                         <Input type="date" className="w-full" {...register('date')} />
                     </FormEntry>
@@ -184,16 +217,16 @@ export const FormEntry: React.FC<React.DetailedHTMLProps<React.HTMLAttributes<HT
     label,
     ...props
 }) => {
-    return (
-        <div {...props}>
-            <div className="flex justify-between items-end pb-1">
-                {label}:
-                {action ? action : null}
+        return (
+            <div {...props}>
+                <div className="flex justify-between items-end pb-1">
+                    {label}:
+                    {action ? action : null}
+                </div>
+                {children}
             </div>
-            {children}
-        </div>
-    );
-};
+        );
+    };
 
 export const Title: React.FC = (props) => (
     <b className="col-span-full" {...props} />

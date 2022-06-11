@@ -6,8 +6,11 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Progress } from "./ui/Progress";
 import { useLoading } from "./use-loading";
+import { useAppStore } from './app-store';
+import { useNavigate } from "react-router-dom";
 
 export const RecordList: React.VFC = () => {
+    const navigate = useNavigate();
     const [params] = useSearchParams();
     const { isLoading, loading } = useLoading();
     const [data, setData] = useState<Paginated<string[][]>>({
@@ -26,6 +29,10 @@ export const RecordList: React.VFC = () => {
         loading(records.get)('chemical-application', parameters).then(setData);
     }, [records, params]);
 
+    const onDuplicateRows = (rows: string[][]) => () => {
+        navigate('records/add', { state: { rows } });
+    };
+
     return (
         <div>
             <Link to="/records/add">
@@ -33,14 +40,15 @@ export const RecordList: React.VFC = () => {
             </Link>
             <Progress active={isLoading} />
             <div className="flex flex-col gap-4">
-                {data.rows.map(([id, date, field, crop, acres, chemical, amount], index) => {
+                {data.rows.map((row, index) => {
+                    const [id, date, field, crop, acres, chemical, amount] = row;
                     const [_, previousDate] = data.rows[index - 1] ?? [];
                     return (
                         <React.Fragment key={id}>
                             {date === previousDate ? null : (
                                 <div className="flex items-end">
                                     <b className="grow">{date}</b>
-                                    <Button>duplicate</Button>
+                                    <Button onClick={onDuplicateRows([row])}>duplicate</Button>
                                 </div>
                             )}
                             <Link to={`/records/${id}`} className="no-underline">

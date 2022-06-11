@@ -15,4 +15,4 @@ export const log = <Result = any, Args extends any[] = any[]>(message: string, f
     return result;
 }
 
-export const useLog = create(appStore);
+export const useAppStore = create(appStore);
