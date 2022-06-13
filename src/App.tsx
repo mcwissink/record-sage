@@ -11,7 +11,7 @@ export const App: React.FC = () => {
     } = useRecords();
 
     return (
-        <div className="App">
+        <>
             {isInitialized ? (
                 isAuthenticated ? (
                     isConnected ? (
@@ -19,6 +19,6 @@ export const App: React.FC = () => {
                     ) : <Setup />
                 ) : <Login />
             ) : <Progress />}
-        </div>
+        </>
     );
 }

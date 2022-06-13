@@ -27,7 +27,7 @@ const DEFAULT_FIELDS = {
 const isRows = (state: any): state is { rows: string[][] } => state && 'rows' in state;
 export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
-    const { state, pathname } = useLocation();
+    const { state } = useLocation();
     const [fields, setFields] = useState<string[]>([]);
     const [crops, setCrops] = useState<string[]>([]);
     const [chemicals, setChemicals] = useState<string[]>([]);
@@ -35,7 +35,6 @@ export const RecordEntry: React.VFC = () => {
         records,
     } = useRecords();
 
-    console.log(state);
     const {
         reset,
         register,
@@ -50,7 +49,10 @@ export const RecordEntry: React.VFC = () => {
                 field: state.rows[0][2],
                 crop: state.rows[0][3],
                 acres: state.rows[0][4],
-                applications: [{
+                applications: state.rows.map((row) => ({
+                    chemical: row[5],
+                    amount: row[6],
+                })) ?? [{
                     chemical: state.rows[0][5],
                     amount: state.rows[0][6],
                 }],
@@ -58,7 +60,6 @@ export const RecordEntry: React.VFC = () => {
         }
     });
     const formData = watch();
-    console.log(formData);
 
     const { fields: formFields, append, remove } = useFieldArray({
         control,

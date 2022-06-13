@@ -6,7 +6,6 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Progress } from "./ui/Progress";
 import { useLoading } from "./use-loading";
-import { useAppStore } from './app-store';
 import { useNavigate } from "react-router-dom";
 
 export const RecordList: React.VFC = () => {
@@ -33,6 +32,16 @@ export const RecordList: React.VFC = () => {
         navigate('records/add', { state: { rows } });
     };
 
+    const rowsByDate = data.rows.reduce<Record<string, string[][]>>((acc, row) => {
+        const [_, date] = row;
+        if (acc[date]) {
+            acc[date].push(row);
+        } else {
+            acc[date] = [row];
+        }
+        return acc;
+    }, {});
+
     return (
         <div>
             <Link to="/records/add">
@@ -40,17 +49,13 @@ export const RecordList: React.VFC = () => {
             </Link>
             <Progress active={isLoading} />
             <div className="flex flex-col gap-4">
-                {data.rows.map((row, index) => {
-                    const [id, date, field, crop, acres, chemical, amount] = row;
-                    const [_, previousDate] = data.rows[index - 1] ?? [];
-                    return (
-                        <React.Fragment key={id}>
-                            {date === previousDate ? null : (
-                                <div className="flex items-end">
-                                    <b className="grow">{date}</b>
-                                    <Button onClick={onDuplicateRows([row])}>duplicate</Button>
-                                </div>
-                            )}
+                {Object.entries(rowsByDate).map(([date, rows]) => (
+                    <React.Fragment key={date}>
+                        <div className="flex items-end">
+                            <b className="grow">{date}</b>
+                            <Button onClick={onDuplicateRows(rows)}>duplicate</Button>
+                        </div>
+                        {rows.map(([id, date, field, crop, acres, chemical, amount]) => (
                             <Link to={`/records/${id}`} className="no-underline">
                                 <Card className="flex items-center">
                                     <div className="grow flex flex-col gap-2">
@@ -59,9 +64,9 @@ export const RecordList: React.VFC = () => {
                                     </div>
                                 </Card>
                             </Link>
-                        </React.Fragment>
-                    );
-                })}
+                        ))}
+                    </React.Fragment>
+                ))}
             </div>
         </div>
     )
