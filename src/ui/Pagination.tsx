@@ -2,7 +2,7 @@ import React from 'react';
 import cn from 'classnames';
 import { Link } from 'react-router-dom';
 
-export const Pagination: React.VFC<React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
+export const Pagination: React.VFC<React.ComponentPropsWithoutRef<'span'> & {
     offset: number;
     limit: number;
     total: number;

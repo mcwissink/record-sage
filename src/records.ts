@@ -102,7 +102,7 @@ export class Records {
 
     insert = log('records:insert', async (table: string, row: Array<string>) => {
         await this.cache.insert(table, [this.generateId()].concat(row));
-        await online(this.sync)();
+        online(this.sync)();
     });
 
     get = log('records:get', async (table: string, options?: GetOptions): Promise<Paginated<string[][]>> => {
@@ -120,7 +120,7 @@ export class Records {
 
     delete = log('records:delete', async (table: string, id: string) => {
         await this.cache.delete(table, id);
-        await online(this.sync)();
+        online(this.sync)();
     });
 
     private syncTable = async (table: string) => {

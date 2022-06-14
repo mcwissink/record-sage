@@ -1,7 +1,7 @@
 import React from 'react';
 import cn from 'classnames';
 
-type Props = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+type Props = React.ComponentPropsWithoutRef<'input'>;
 
 export const Input = React.forwardRef<HTMLInputElement, Props>(({
     className,

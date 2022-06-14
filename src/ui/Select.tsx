@@ -1,7 +1,7 @@
 import React from 'react';
 import cn from 'classnames';
 
-type Props = React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>;
+type Props = React.ComponentPropsWithoutRef<'select'>;
 
 export const Select = React.forwardRef<HTMLSelectElement, Props>(({
     className,

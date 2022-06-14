@@ -1,7 +1,7 @@
 import React from 'react'
 import cn from 'classnames';
 
-export const Card: React.FC<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> = ({
+export const Card: React.FC<React.ComponentPropsWithoutRef<'div'>> = ({
     children,
     className,
     ...props
