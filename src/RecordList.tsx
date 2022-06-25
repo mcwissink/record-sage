@@ -7,6 +7,7 @@ import { Card } from "./ui/Card";
 import { Progress } from "./ui/Progress";
 import { useLoading } from "./use-loading";
 import { useNavigate } from "react-router-dom";
+import { Label } from "./RecordView";
 
 export const RecordList: React.VFC = () => {
     const navigate = useNavigate();
@@ -55,12 +56,15 @@ export const RecordList: React.VFC = () => {
                             <b className="grow">{date}</b>
                             <Button onClick={onDuplicateRows(rows)}>duplicate</Button>
                         </div>
-                        {rows.map(([id, _date, field, crop, acres, chemical, _registration, amount]) => (
+                        {rows.map(([id, _date, field, crop, acres, chemical, registration, amount]) => (
                             <Link key={id} to={`/records/${id}`} className="no-underline">
                                 <Card className="flex items-center">
-                                    <div className="grow flex flex-col gap-2">
-                                        <span><b>Location: </b>{field} - {crop} - {acres}</span>
-                                        <span><b>Chemical: </b>{chemical} - {amount}</span>
+                                    <div className="grid gap-1 grid-cols-1 md:grid-cols-2 w-full">
+                                        <Label label="field">{field}</Label>
+                                        <Label label="crop">{crop}</Label>
+                                        <Label label="acres">{acres}</Label>
+                                        <Label label="chemical">{chemical} [{registration}]</Label>
+                                        <Label label="amount">{amount}</Label>
                                     </div>
                                 </Card>
                             </Link>

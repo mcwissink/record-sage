@@ -111,19 +111,21 @@ export const RecordEntry: React.VFC = () => {
                 className={cn('contents', {
                 })}
             >
-                <div className="flex justify-between col-span-full">
+                <div className="flex justify-between items-end col-span-full">
                     <b>Application</b>
                     <Button
                         type="button"
                         onClick={() => {
-                            reset(
-                                {
-                                    ...DEFAULT_FIELDS,
-                                    acres: '',
-                                    field: '',
-                                    crop: '',
-                                },
-                            );
+                            if (window.confirm('Reset')) {
+                                reset(
+                                    {
+                                        ...DEFAULT_FIELDS,
+                                        acres: '',
+                                        field: '',
+                                        crop: '',
+                                    },
+                                );
+                            }
                         }}>
                         reset
                     </Button>
@@ -202,15 +204,13 @@ export const RecordEntry: React.VFC = () => {
                 </Card>
                 <hr className="w-full col-span-full" />
             </div>
-            <div>
-                <Button
-                    type="submit"
-                    loading={isSubmitting}
-                    className="col-span-2"
-                >
-                    complete
-                </Button>
-            </div>
+            <Button
+                type="submit"
+                loading={isSubmitting}
+                className="col-span-2 md:w-36"
+            >
+                complete
+            </Button>
         </form>
     )
 }

@@ -12,11 +12,11 @@ export const RecordView: React.VFC = () => {
     const navigate = useNavigate();
     const { isLoading, loading } = useLoading();
     const { recordId } = useParams();
-    const [data, setData] = useState<string[]>([]);
+    const [row, setRow] = useState<string[]>([]);
     const { records } = useRecords();
     useEffect(() => {
         if (recordId) {
-            loading(records.find)(TABLE, recordId).then(setData);
+            loading(records.find)(TABLE, recordId).then(setRow);
         }
     }, [records, recordId, loading]);
 
@@ -28,7 +28,7 @@ export const RecordView: React.VFC = () => {
         return <Progress />
     }
 
-    if (!data.length) {
+    if (!row.length) {
         return <div>404</div>
     }
 
@@ -39,10 +39,30 @@ export const RecordView: React.VFC = () => {
         }
     };
 
+    const [_id, date, field, crop, acres, chemical, registration, amount, applicator, certification] = row;
+
     return (
-        <div>
-            {data.map((value, index) => <div key={index}>{value}</div>)}
-            <Button type="button" onClick={onDelete(data)}>delete</Button>
+        <div className="grid gap-2">
+            <div className="flex items-end">
+                <b className="grow">{date}</b>
+                <Button type="button" onClick={onDelete(row)}>delete</Button>
+            </div>
+            <div className="flex flex-col gap-1">
+                <Label label="field">{field}</Label>
+                <Label label="crop">{crop}</Label>
+                <Label label="acres">{acres}</Label>
+                <Label label="chemical">{chemical} [{registration}]</Label>
+                <Label label="amount">{amount}</Label>
+                <Label label="applicator">{applicator}</Label>
+                <Label label="certification">{certification}</Label>
+            </div>
         </div>
     )
 }
+
+export const Label: React.FC<{ label: string }> = ({ label, children, ...props }) => (
+    <div {...props}>
+        <b>{label}: </b>
+        {children}
+    </div>
+);
