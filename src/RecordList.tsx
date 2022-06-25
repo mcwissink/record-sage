@@ -55,8 +55,8 @@ export const RecordList: React.VFC = () => {
                             <b className="grow">{date}</b>
                             <Button onClick={onDuplicateRows(rows)}>duplicate</Button>
                         </div>
-                        {rows.map(([id, date, field, crop, acres, chemical, amount]) => (
-                            <Link to={`/records/${id}`} className="no-underline">
+                        {rows.map(([id, _date, field, crop, acres, chemical, _registration, amount]) => (
+                            <Link key={id} to={`/records/${id}`} className="no-underline">
                                 <Card className="flex items-center">
                                     <div className="grow flex flex-col gap-2">
                                         <span><b>Location: </b>{field} - {crop} - {acres}</span>

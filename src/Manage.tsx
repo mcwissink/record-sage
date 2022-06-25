@@ -108,7 +108,7 @@ export const Manage: React.VFC = () => {
                         {rows.map((row) => (
                             <tr key={row[0]} className="contents cursor-pointer">
                                 {row.map((cell, index) =>
-                                    <td key={index} className="truncate">{cell}</td>
+                                    <td key={index} className="truncate">{index ? cell : cell.slice(0, 8)}</td>
                                 )}
                                 <td>
                                     <Button type="button" onClick={onDelete(row)}>delete</Button>

@@ -15,7 +15,7 @@ interface Form {
     crop: string;
     acres: string;
     applications: Array<{
-        chemicalId: string;
+        chemical: string;
         amount: string;
     }>
 }
@@ -35,6 +35,8 @@ export const RecordEntry: React.VFC = () => {
         records,
     } = useRecords();
 
+    console.log(state);
+
     const {
         reset,
         register,
@@ -51,10 +53,10 @@ export const RecordEntry: React.VFC = () => {
                 acres: state.rows[0][4],
                 applications: state.rows.map((row) => ({
                     chemical: row[5],
-                    amount: row[6],
+                    amount: row[7],
                 })) ?? [{
-                    chemicalId: state.rows[0][5],
-                    amount: state.rows[0][6],
+                    chemical: state.rows[0][5],
+                    amount: state.rows[0][7],
                 }],
             } : {})
         }
@@ -67,15 +69,14 @@ export const RecordEntry: React.VFC = () => {
     });
 
     const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications }: Form) => {
-        for (const { chemicalId, amount } of applications) {
-            const [chemical, registration] = chemicals[chemicalId];
+        for (const { chemical, amount } of applications) {
             await records.insert('chemical-application', [
                 date,
                 field,
                 crop,
                 acres,
                 chemical,
-                registration,
+                chemicals[chemical][2],
                 amount,
                 'applicator',
                 'certification'
@@ -97,8 +98,8 @@ export const RecordEntry: React.VFC = () => {
             ]);
             setFields(fields.rows.map(([_, name]) => name));
             setCrops(crops.rows.map(([_, name]) => name));
-            setChemicals(chemicals.rows.reduce<Record<string, string[]>>((acc, [id, ...rest]) => {
-                acc[id] = rest;
+            setChemicals(chemicals.rows.reduce<Record<string, string[]>>((acc, row) => {
+                acc[row[1]] = row;
                 return acc;
             }, {}));
         })();
@@ -167,15 +168,15 @@ export const RecordEntry: React.VFC = () => {
                             action={<Button onClick={() => remove(index)}>remove</Button>}
                         >
                             <div className="flex">
-                                <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemicalId`)}>
+                                <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemical`)}>
                                     <option disabled value="">
                                         Select a chemical
                                     </option>
-                                    {Object.entries(chemicals).map(([id, [chemical]]) => (
-                                        <option key={id} value={id}>{chemical}</option>
+                                    {Object.keys(chemicals).map((chemical) => (
+                                        <option key={chemical} value={chemical}>{chemical}</option>
                                     ))}
                                 </Select>
-                                <Input readOnly value={chemicals[formData.applications[index].chemicalId]?.[1] ?? ''} />
+                                <Input readOnly value={chemicals[formData.applications[index].chemical]?.[2] ?? ''} />
                             </div>
                         </FormEntry>
                         <FormEntry

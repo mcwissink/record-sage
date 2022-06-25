@@ -18,7 +18,7 @@ export const RecordView: React.VFC = () => {
         if (recordId) {
             loading(records.find)(TABLE, recordId).then(setData);
         }
-    }, [records, recordId]);
+    }, [records, recordId, loading]);
 
     if (!recordId) {
         return <div>Missing ID</div>
