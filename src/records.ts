@@ -6,7 +6,7 @@ import { online } from './utils/online';
 
 export type Schema<T = any> = Record<string, {
     columns: string[];
-    offline?: true;
+    cache?: true;
     rows?: Array<Array<number | string>>;
     options?: T;
 }>;
@@ -102,12 +102,15 @@ export class Records {
 
     insert = log('records:insert', async (table: string, row: Array<string>) => {
         await this.cache.insert(table, [this.generateId()].concat(row));
-        online(this.sync)();
+        const response = online(this.sync)();
+        if (!this.schema[table].cache) {
+            await response;
+        }
     });
 
     get = log('records:get', async (table: string, options?: GetOptions): Promise<Paginated<string[][]>> => {
         const cache = await this.cache.get(table, options);
-        return this.schema[table].offline ? cache : await online(this.provider.get, cache)(table, options);
+        return this.schema[table].cache ? cache : await online(this.provider.get, cache)(table, options);
     });
 
     find = log('records:find', async (table: string, id: string): Promise<string[]> => {
@@ -124,10 +127,9 @@ export class Records {
     });
 
     private syncTable = async (table: string) => {
-        const { offline } = this.schema[table];
         const { rows } = await this.provider.get(
             table,
-            offline ? null : { limit: 5, offset: 0 }
+            this.schema[table].cache ? null : { limit: 5, offset: 0 }
         );
         await this.cache.reset(table, rows);
     }

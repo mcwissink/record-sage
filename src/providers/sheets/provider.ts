@@ -100,6 +100,8 @@ export class SheetsProvider extends RecordsProvider {
 
     disconnect = log('provider:disconnect', async () => {
         localStorage.removeItem(SheetsProvider.SPREADSHEET_ID_KEY);
+        this._schema = undefined;
+        this._spreadsheetId = undefined;
     });
 
     connect = log('provider:connect', async (schema: Schema) => {

@@ -6,18 +6,18 @@ export const schema: Schema = {
     },
     'chemical': {
         columns: ['id', 'name', 'registration'],
-        offline: true,
+        cache: true,
     },
     'field': {
         columns: ['id', 'name'],
-        offline: true,
+        cache: true,
     },
     'crop': {
         columns: ['id', 'name'],
-        offline: true,
+        cache: true,
     },
     'applicator': {
         columns: ['id', 'name', 'certification'],
-        offline: true,
+        cache: true,
     },
 };

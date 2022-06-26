@@ -34,7 +34,7 @@ export const RecordList: React.VFC = () => {
     };
 
     const rowsByDate = data.rows.reduce<Record<string, string[][]>>((acc, row) => {
-        const [_, date] = row;
+        const [_id, date] = row;
         if (acc[date]) {
             acc[date].push(row);
         } else {
