@@ -19,12 +19,12 @@ export const Settings: React.VFC = () => {
 
     const onDisconnect = async () => {
         disconnect();
-        navigate('', { replace: true });
+        navigate('/', { replace: true });
     }
 
     const onLogout = async () => {
         logout();
-        navigate('', { replace: true });
+        navigate('/', { replace: true });
     }
 
     return (
