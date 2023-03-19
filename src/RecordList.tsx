@@ -58,7 +58,7 @@ export const RecordList: React.VFC = () => {
                         </div>
                         {rows.map(([id, _date, field, crop, acres, chemical, registration, amount]) => (
                             <Link key={id} to={`/records/${id}`} className="no-underline">
-                                <Card className="flex items-center">
+                                <Card className="flex items-center hover:bg-gray-200 cursor-pointer">
                                     <div className="grid gap-1 grid-cols-1 md:grid-cols-2 w-full">
                                         <Label label="field">{field}</Label>
                                         <Label label="crop">{crop}</Label>
