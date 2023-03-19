@@ -28,13 +28,14 @@ export const Settings: React.VFC = () => {
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="grid gap-4">
             <div className="flex gap-4">
                 <Button onClick={onDisconnect}>disconnect</Button>
                 <Button onClick={onLogout}>logout</Button>
             </div>
-            <div>
+            <div className="grid gap-2">
                 <b>Connect</b>
+                <div>{records.generateCloneUrl()}</div>
                 <img
                     className="block"
                     src={qrCode}

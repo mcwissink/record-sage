@@ -35,8 +35,6 @@ export const RecordEntry: React.VFC = () => {
         records,
     } = useRecords();
 
-    console.log(state);
-
     const {
         reset,
         register,
@@ -76,8 +74,9 @@ export const RecordEntry: React.VFC = () => {
                 crop,
                 acres,
                 chemical,
-                chemicals[chemical][2],
+                chemicals[chemical][3],
                 amount,
+                chemicals[chemical][2],
                 'applicator',
                 'certification'
             ]);
@@ -178,14 +177,17 @@ export const RecordEntry: React.VFC = () => {
                                         <option key={chemical} value={chemical}>{chemical}</option>
                                     ))}
                                 </Select>
-                                <Input readOnly value={chemicals[formData.applications[index].chemical]?.[2] ?? ''} />
                             </div>
                         </FormEntry>
                         <FormEntry
                             label="amount"
                             className="col-span-2"
                         >
-                            <Input type="number" className="w-full" {...register(`applications.${index}.amount`)} />
+                            <div className="flex">
+                                <Input type="number" className="w-full" {...register(`applications.${index}.amount`)} />
+
+                                <Input readOnly value={chemicals[formData.applications[index].chemical]?.[2] ?? ''} />
+                            </div>
                         </FormEntry>
                     </Card>
                 ))}

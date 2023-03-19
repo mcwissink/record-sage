@@ -2,10 +2,10 @@ import { Schema } from "./records";
 
 export const schema: Schema = {
     'chemical-application': {
-        columns: ['id', 'date', 'field', 'crop', 'acres', 'chemical', 'registration', 'amount', 'applicator', 'certification'],
+        columns: ['id', 'date', 'field', 'crop', 'acres', 'chemical', 'registration', 'amount', 'unit', 'applicator', 'certification'],
     },
     'chemical': {
-        columns: ['id', 'name', 'registration'],
+        columns: ['id', 'name', 'unit', 'registration'],
         cache: true,
     },
     'field': {
