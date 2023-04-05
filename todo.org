@@ -8,3 +8,7 @@
     - Or denote the value
   - Fix duplicate feature
     - Fix chemical not being correct
+
+  - note: ability to add a note for a given date
+  - ability to have an amount of product linked with a specific product
+  - pin specific applications so they are easy to find

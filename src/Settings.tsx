@@ -18,12 +18,12 @@ export const Settings: React.VFC = () => {
     }, [setQrCode, records]);
 
     const onDisconnect = async () => {
-        disconnect();
+        await disconnect();
         navigate('/', { replace: true });
     }
 
     const onLogout = async () => {
-        logout();
+        await logout();
         navigate('/', { replace: true });
     }
 

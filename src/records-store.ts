@@ -12,7 +12,7 @@ export const recordsStore = vanilla<{
     isOnline: boolean;
     records: Records;
     setup: (options: RecordsSetupOptions) => Promise<void>;
-    disconnect: () => void;
+    disconnect: () => Promise<void>;
     initialize: () => Promise<void>;
     login: () => Promise<void>;
     logout: () => Promise<void>;

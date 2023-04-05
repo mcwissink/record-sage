@@ -106,7 +106,7 @@ export const Manage: React.VFC = () => {
                     </thead>
                     <tbody className="contents">
                         {rows.map((row) => (
-                            <tr key={row[0]} className="contents cursor-pointer">
+                            <tr key={row[0]} className="contents">
                                 {row.map((cell, index) =>
                                     <td key={index} className="truncate">{index ? cell : cell.slice(0, 8)}</td>
                                 )}
