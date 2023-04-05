@@ -41,7 +41,7 @@ export const RecordEntry: React.VFC = () => {
         control,
         handleSubmit,
         watch,
-        formState: { isSubmitting }
+        formState: { isSubmitting, errors }
     } = useForm<Form>({
         defaultValues: {
             ...DEFAULT_FIELDS,
@@ -105,7 +105,7 @@ export const RecordEntry: React.VFC = () => {
     }, [records, setFields, setCrops]);
 
     return (
-        <form onSubmit={onSubmit} className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 grid-cols-2 md:grid-cols-4">
             <div
                 className={cn('contents', {
                 })}
@@ -130,10 +130,10 @@ export const RecordEntry: React.VFC = () => {
                     </Button>
                 </div>
                 <FormEntry className="col-span-2" label="date">
-                    <Input type="date" className="w-full" {...register('date')} />
+                    <Input type="date" className="w-full" {...register('date', { required: 'Missing date' })} />
                 </FormEntry>
                 <FormEntry className="col-span-2" label="field">
-                    <Select defaultValue="" className="w-full" {...register('field')}>
+                     <Select defaultValue="" className="w-full" {...register('field', { required: 'Missing field' })}>
                         <option disabled value="">
                             Select a field
                         </option>
@@ -143,7 +143,7 @@ export const RecordEntry: React.VFC = () => {
                     </Select>
                 </FormEntry>
                 <FormEntry className="col-span-2" label="crop">
-                    <Select defaultValue="" className="w-full" {...register('crop')}>
+                    <Select defaultValue="" className="w-full" {...register('crop', { required: 'Missing crop' })}>
                         <option disabled value="">
                             Select a crop
                         </option>
@@ -153,7 +153,7 @@ export const RecordEntry: React.VFC = () => {
                     </Select>
                 </FormEntry>
                 <FormEntry className="col-span-2" label="acres">
-                    <Input type="number" className="w-full" {...register('acres')} />
+                    <Input type="number" className="w-full" {...register('acres', { required: 'Missing acres' })} />
                 </FormEntry>
                 <hr className="w-full col-span-full" />
             </div>
@@ -169,7 +169,7 @@ export const RecordEntry: React.VFC = () => {
                             action={<Button onClick={() => remove(index)}>remove</Button>}
                         >
                             <div className="flex">
-                                <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemical`)}>
+                                <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemical`, { required: 'Missing chemical' })}>
                                     <option disabled value="">
                                         Select a chemical
                                     </option>
@@ -184,14 +184,14 @@ export const RecordEntry: React.VFC = () => {
                             className="col-span-2"
                         >
                             <div className="flex">
-                                <Input type="number" className="w-full" {...register(`applications.${index}.amount`)} />
+                                <Input type="number" className="w-full" {...register(`applications.${index}.amount`, { required: 'Missing amount' })} />
 
                                 <Input readOnly value={chemicals[formData.applications[index].chemical]?.[2] ?? ''} />
                             </div>
                         </FormEntry>
                     </Card>
                 ))}
-                <Card className="relative col-span-2" onClick={() => append({})}>
+                <Card className="relative col-span-2" onClick={() => append({ chemical: '', amount: '' })}>
                     <span className="inset-0 absolute flex justify-center items-center">add</span>
 
                     <FormEntry label="chemical" className="invisible">
@@ -206,10 +206,16 @@ export const RecordEntry: React.VFC = () => {
                 </Card>
                 <hr className="w-full col-span-full" />
             </div>
+            <div className="col-span-full text-red-700">
+                {Object.entries(errors).map(([field, error]) => (
+                    <div key={field}>{error.message}</div>
+                ))}
+            </div>
             <Button
+                onClick={onSubmit}
                 type="submit"
                 loading={isSubmitting}
-                className="col-span-2 md:w-36"
+                className="col-span-full md:w-36"
             >
                 complete
             </Button>
