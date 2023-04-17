@@ -39,7 +39,7 @@ export const RecordView: React.VFC = () => {
         }
     };
 
-    const [_id, date, field, crop, acres, chemical, registration, amount, applicator, certification] = row;
+    const [_id, date, field, crop, acres, chemical, registration, amount, unit, applicator, certification, note] = row;
 
     return (
         <div className="grid gap-2">
@@ -53,8 +53,10 @@ export const RecordView: React.VFC = () => {
                 <Label label="acres">{acres}</Label>
                 <Label label="chemical">{chemical} [{registration}]</Label>
                 <Label label="amount">{amount}</Label>
+                <Label label="unit">{unit}</Label>
                 <Label label="applicator">{applicator}</Label>
                 <Label label="certification">{certification}</Label>
+                <Label label="note">{note}</Label>
             </div>
         </div>
     )

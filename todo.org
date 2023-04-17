@@ -1,7 +1,6 @@
 * TODO
   - Fix my stuff
   - Add visibility into cache and journal
-  - Fix form submission issue. Only submit form on click
   - Ensure chemical units are working fine
   - Data migration process
   - Maybe do amount per acre

@@ -56,7 +56,7 @@ export const RecordList: React.VFC = () => {
                             <b className="grow">{date}</b>
                             <Button onClick={onDuplicateRows(rows)}>duplicate</Button>
                         </div>
-                        {rows.map(([id, _date, field, crop, acres, chemical, registration, amount]) => (
+                        {rows.map(([id, _date, field, crop, acres, chemical, _unit, registration, amount, _applicator, _certification, note]) => (
                             <Link key={id} to={`/records/${id}`} className="no-underline">
                                 <Card className="flex items-center hover:bg-gray-200 cursor-pointer">
                                     <div className="grid gap-1 grid-cols-1 md:grid-cols-2 w-full">
@@ -65,6 +65,7 @@ export const RecordList: React.VFC = () => {
                                         <Label label="acres">{acres}</Label>
                                         <Label label="chemical">{chemical} [{registration}]</Label>
                                         <Label label="amount">{amount}</Label>
+                                        <Label label="note">{note}</Label>
                                     </div>
                                 </Card>
                             </Link>

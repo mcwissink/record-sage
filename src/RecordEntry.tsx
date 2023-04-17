@@ -18,6 +18,7 @@ interface Form {
         chemical: string;
         amount: string;
     }>
+    note: string;
 }
 
 const DEFAULT_FIELDS = {
@@ -66,7 +67,7 @@ export const RecordEntry: React.VFC = () => {
         name: 'applications',
     });
 
-    const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications }: Form) => {
+    const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications, note }) => {
         for (const { chemical, amount } of applications) {
             await records.insert('chemical-application', [
                 date,
@@ -78,7 +79,8 @@ export const RecordEntry: React.VFC = () => {
                 amount,
                 chemicals[chemical][2],
                 'applicator',
-                'certification'
+                'certification',
+                note,
             ]);
         }
         navigate('/');
@@ -204,6 +206,14 @@ export const RecordEntry: React.VFC = () => {
                         <Input type="number" />
                     </FormEntry>
                 </Card>
+                <hr className="w-full col-span-full" />
+            </div>
+            <div
+                className={cn('contents', {
+                })}
+            >
+                <Title>Note</Title>
+                <textarea className="col-span-full" {...register('note')} />
                 <hr className="w-full col-span-full" />
             </div>
             <div className="col-span-full text-red-700">
