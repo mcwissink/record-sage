@@ -16,7 +16,7 @@ export const RecordView: React.VFC = () => {
     const { records } = useRecords();
     useEffect(() => {
         if (recordId) {
-            loading(records.find)(TABLE, recordId).then(setRow);
+            loading(records.query)(TABLE, `SELECT * WHERE A = '${recordId}'`).then(setRow);
         }
     }, [records, recordId, loading]);
 

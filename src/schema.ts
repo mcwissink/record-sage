@@ -5,7 +5,7 @@ export const schema: Schema = {
         columns: ['id', 'date', 'field', 'crop', 'acres', 'chemical', 'registration', 'amount', 'unit', 'applicator', 'certification', 'note'],
     },
     'chemical': {
-        columns: ['id', 'name', 'unit', 'registration'],
+        columns: ['id', 'name', 'unit', 'registration', 'default'],
         cache: true,
     },
     'field': {

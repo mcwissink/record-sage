@@ -267,6 +267,25 @@ export class SheetsProvider extends RecordsProvider {
         return values[0];
     });
 
+    query = log('provider:query', async (table: string, query: string) => {
+        const { columns } = this.schema[table];
+        const rowCount = await this.getRowCount(table);
+        const start = this.getA1Notation(0, 0);
+        const end = this.getA1Notation(1 + rowCount, columns.length - 1);
+        const queryStart = this.getA1Notation(1, 0);
+        const queryEnd = this.getA1Notation(1 + rowCount, columns.length - 1);
+        const { body } = await this.api.client.sheets.spreadsheets.values.update({
+            spreadsheetId: this.spreadsheetId,
+            valueInputOption: 'USER_ENTERED',
+            range: SheetsProvider.range('query', start, end),
+            values: [[`=QUERY('${table}'!${queryStart}:${queryEnd}, "${query}")`]],
+            includeValuesInResponse: true,
+        });
+        const data = JSON.parse(body);
+        console.log(data);
+        return [];
+    });
+
     delete = log('provider:delete', async (table: string, id: string) => {
         const rowIndex = await this.getIndexById(table, id);
         if (rowIndex === -1) {
