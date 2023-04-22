@@ -12,11 +12,11 @@ export const RecordView: React.VFC = () => {
     const navigate = useNavigate();
     const { isLoading, loading } = useLoading();
     const { recordId } = useParams();
-    const [row, setRow] = useState<string[]>([]);
+    const [row = [], setRow] = useState<string[]>([]);
     const { records } = useRecords();
     useEffect(() => {
         if (recordId) {
-            loading(records.query)(TABLE, `SELECT * WHERE A = '${recordId}'`).then(setRow);
+            loading(records.query)(TABLE, `SELECT * WHERE A = '${recordId}'`).then(([r])=> setRow(r));
         }
     }, [records, recordId, loading]);
 

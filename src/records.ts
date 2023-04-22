@@ -117,7 +117,7 @@ export class Records {
         return await online(this.provider.find, [])(table, id);
     });
 
-    query = log('records:query', async (table: string, query: string): Promise<string[]> => {
+    query = log('records:query', async (table: string, query: string): Promise<string[][]> => {
         return await online(this.provider.query, [])(table, query);
     });
 
@@ -204,7 +204,7 @@ export class RecordsProvider {
     async find(_table: string, _id: string): Promise<string[]> {
         throw new Error(`'find' is not implemented`);
     }
-    async query(_table: string, _query: string): Promise<string[]> {
+    async query(_table: string, _query: string): Promise<string[][]> {
         throw new Error(`'query' is not implemented`);
     }
     async update(_table: string): Promise<any> {
