@@ -26,7 +26,7 @@ export const RecordList: React.VFC = () => {
     }
 
     useEffect(() => {
-        loading(records.get)('chemical-application', parameters).then(setData);
+        loading(records.query)('chemical-application', `SELECT * ORDER BY B DESC`).then(setData);
     }, [records, params]);
 
     const onDuplicateRows = (rows: Rows<'chemical-application'>) => () => {

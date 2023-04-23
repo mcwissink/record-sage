@@ -15,9 +15,6 @@
     - basically open the RecordEntry form with all the grouped applications
   - note isn't duplicated
 
-  - ability to have an amount of product linked with a specific product
-    - implement 'default' on chemical record
-
   - pin specific applications so they are easy to find
     - add a 'pin' field to applications
     - show pinned application groups in RecordEntry

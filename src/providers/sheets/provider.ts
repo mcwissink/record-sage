@@ -277,7 +277,12 @@ export class SheetsProvider extends RecordsProvider {
             includeValuesInResponse: true,
         });
         const data = JSON.parse(body);
-        return this.convertToRows(table, data.updatedData.values);
+        return {
+            rows: this.convertToRows(table, data.updatedData.values),
+            total: rowCount,
+            limit: 0,
+            offset: 0,
+        };
     });
 
     delete = log('provider:delete', async (table: string, id: string) => {

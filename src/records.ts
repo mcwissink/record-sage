@@ -123,8 +123,13 @@ export class Records {
         return await online(this.provider.find, undefined)(table, id);
     });
 
-    query = log('records:query', async <T extends keyof Schema>(table: T, query: string): Promise<Rows<T>> => {
-        return await online(this.provider.query, {})(table, query);
+    query = log('records:query', async <T extends keyof Schema>(table: T, query: string): Promise<Paginated<Rows<T>>> => {
+        return await online(this.provider.query, {
+            rows: {},
+            total: 0,
+            limit: 0,
+            offset: 0,
+        })(table, query);
     });
 
     private generateId() {
@@ -210,7 +215,7 @@ export class RecordsProvider {
     async find<T extends keyof Schema>(_table: string, _id: string): Promise<Row<T>> {
         throw new Error(`'find' is not implemented`);
     }
-    async query<T extends keyof Schema>(_table: string, _query: string): Promise<Rows<T>> {
+    async query<T extends keyof Schema>(_table: string, _query: string): Promise<Paginated<Rows<T>>> {
         throw new Error(`'query' is not implemented`);
     }
     async update(_table: string): Promise<any> {
