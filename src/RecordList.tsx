@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom";
-import { Paginated } from "./records"
+import { Paginated, Rows } from "./records"
 import { useRecords } from "./records-store";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -13,8 +13,8 @@ export const RecordList: React.VFC = () => {
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const { isLoading, loading } = useLoading();
-    const [data, setData] = useState<Paginated<string[][]>>({
-        rows: [],
+    const [data, setData] = useState<Paginated<Rows<'chemical-application'>>>({
+        rows: {},
         total: 0,
         limit: 0,
         offset: 0,
@@ -29,16 +29,15 @@ export const RecordList: React.VFC = () => {
         loading(records.get)('chemical-application', parameters).then(setData);
     }, [records, params]);
 
-    const onDuplicateRows = (rows: string[][]) => () => {
+    const onDuplicateRows = (rows: Rows<'chemical-application'>) => () => {
         navigate('records/add', { state: { rows } });
     };
 
-    const rowsByDate = data.rows.reduce<Record<string, string[][]>>((acc, row) => {
-        const [_id, date] = row;
-        if (acc[date]) {
-            acc[date].push(row);
+    const rowsByDate = Object.entries(data.rows).reduce<Record<string, Rows<'chemical-application'>>>((acc, [id, row]) => {
+        if (acc[row.date]) {
+            acc[row.date][id] = row;
         } else {
-            acc[date] = [row];
+            acc[row.date] = { [id]: row };
         }
         return acc;
     }, {});
@@ -56,16 +55,16 @@ export const RecordList: React.VFC = () => {
                             <b className="grow">{date}</b>
                             <Button onClick={onDuplicateRows(rows)}>duplicate</Button>
                         </div>
-                        {rows.map(([id, _date, field, crop, acres, chemical, _unit, registration, amount, _applicator, _certification, note]) => (
+                        {Object.entries(rows).map(([id, row]) => (
                             <Link key={id} to={`/records/${id}`} className="no-underline">
                                 <Card className="flex items-center hover:bg-gray-200 cursor-pointer">
                                     <div className="grid gap-1 grid-cols-1 md:grid-cols-2 w-full">
-                                        <Label label="field">{field}</Label>
-                                        <Label label="crop">{crop}</Label>
-                                        <Label label="acres">{acres}</Label>
-                                        <Label label="chemical">{chemical} [{registration}]</Label>
-                                        <Label label="amount">{amount}</Label>
-                                        <Label label="note">{note}</Label>
+                                        <Label label="field">{row.field}</Label>
+                                        <Label label="crop">{row.crop}</Label>
+                                        <Label label="acres">{row.acres}</Label>
+                                        <Label label="chemical">{row.chemical} [{row.registration}]</Label>
+                                        <Label label="amount">{row.amount}</Label>
+                                        <Label label="note">{row.note}</Label>
                                     </div>
                                 </Card>
                             </Link>

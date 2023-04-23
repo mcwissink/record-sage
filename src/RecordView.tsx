@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom";
 import { useRecords } from "./records-store";
+import { Row } from "./records";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
 import { useLoading } from "./use-loading";
@@ -12,11 +13,11 @@ export const RecordView: React.VFC = () => {
     const navigate = useNavigate();
     const { isLoading, loading } = useLoading();
     const { recordId } = useParams();
-    const [row = [], setRow] = useState<string[]>([]);
+    const [row, setRow] = useState<Row<'chemical-application'> | undefined>();
     const { records } = useRecords();
     useEffect(() => {
         if (recordId) {
-            loading(records.query)(TABLE, `SELECT * WHERE A = '${recordId}'`).then(([r])=> setRow(r));
+            loading(records.query)(TABLE, `SELECT * WHERE A = '${recordId}'`).then((rows)=> setRow(rows[recordId]));
         }
     }, [records, recordId, loading]);
 
@@ -28,35 +29,33 @@ export const RecordView: React.VFC = () => {
         return <Progress />
     }
 
-    if (!row.length) {
+    if (!row) {
         return <div>404</div>
     }
 
-    const onDelete = (row: string[]) => async () => {
-        if (window.confirm(`Delete: ${JSON.stringify(row.slice(1))}`)) {
-            await records.delete(TABLE, row[0]);
+    const onDelete = (row: Row<'chemical-application'>) => async () => {
+        if (window.confirm(`Delete: ${JSON.stringify(row.id)}`)) {
+            await records.delete(TABLE, row.id);
             navigate(-1);
         }
     };
 
-    const [_id, date, field, crop, acres, chemical, registration, amount, unit, applicator, certification, note] = row;
-
     return (
         <div className="grid gap-2">
             <div className="flex items-end">
-                <b className="grow">{date}</b>
+                <b className="grow">{row.date}</b>
                 <Button type="button" onClick={onDelete(row)}>delete</Button>
             </div>
             <div className="flex flex-col gap-1">
-                <Label label="field">{field}</Label>
-                <Label label="crop">{crop}</Label>
-                <Label label="acres">{acres}</Label>
-                <Label label="chemical">{chemical} [{registration}]</Label>
-                <Label label="amount">{amount}</Label>
-                <Label label="unit">{unit}</Label>
-                <Label label="applicator">{applicator}</Label>
-                <Label label="certification">{certification}</Label>
-                <Label label="note">{note}</Label>
+                <Label label="field">{row.field}</Label>
+                <Label label="crop">{row.crop}</Label>
+                <Label label="acres">{row.acres}</Label>
+                <Label label="chemical">{row.chemical} [{row.registration}]</Label>
+                <Label label="amount">{row.amount}</Label>
+                <Label label="unit">{row.unit}</Label>
+                <Label label="applicator">{row.applicator}</Label>
+                <Label label="certification">{row.certification}</Label>
+                <Label label="note">{row.note}</Label>
             </div>
         </div>
     )

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import cn from 'classnames';
 import { format } from 'date-fns';
 import { useRecords } from './records-store';
+import { Rows } from './records';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -25,13 +26,15 @@ const DEFAULT_FIELDS = {
     date: format(new Date(), 'yyyy-MM-dd'),
     applications: [{}],
 }
-const isRows = (state: any): state is { rows: string[][] } => state && 'rows' in state;
+
+const isRows = (state: any): state is { rows: Rows<'chemical-application'>} => state && 'rows' in state;
+
 export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
     const { state } = useLocation();
-    const [fields, setFields] = useState<string[]>([]);
-    const [crops, setCrops] = useState<string[]>([]);
-    const [chemicals, setChemicals] = useState<Record<string, string[]>>({});
+    const [fields, setFields] = useState<Rows<'field'>>({});
+    const [crops, setCrops] = useState<Rows<'crop'>>({});
+    const [chemicals, setChemicals] = useState<Rows<'chemical'>>({});
     const {
         records,
     } = useRecords();
@@ -42,20 +45,21 @@ export const RecordEntry: React.VFC = () => {
         control,
         handleSubmit,
         watch,
+        setValue,
         formState: { isSubmitting, errors }
     } = useForm<Form>({
         defaultValues: {
             ...DEFAULT_FIELDS,
             ...(isRows(state) ? {
-                field: state.rows[0][2],
-                crop: state.rows[0][3],
-                acres: state.rows[0][4],
-                applications: state.rows.map((row) => ({
-                    chemical: row[5],
-                    amount: row[7],
+                field: state.rows[0].field,
+                crop: state.rows[0].crop,
+                acres: state.rows[0].acres,
+                applications: Object.values(state.rows).map((row) => ({
+                    chemical: row.chemical,
+                    amount: row.amount,
                 })) ?? [{
-                    chemical: state.rows[0][5],
-                    amount: state.rows[0][7],
+                    chemical: state.rows[0].chemical,
+                    amount: state.rows[0].amount,
                 }],
             } : {})
         }
@@ -69,19 +73,19 @@ export const RecordEntry: React.VFC = () => {
 
     const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications, note }) => {
         for (const { chemical, amount } of applications) {
-            await records.insert('chemical-application', [
+            await records.insert('chemical-application', {
                 date,
-                field,
-                crop,
+                field: fields[field].name,
+                crop: crops[crop].name,
                 acres,
-                chemical,
-                chemicals[chemical][3],
+                chemical: chemicals[chemical].name,
+                registration: chemicals[chemical].registration,
                 amount,
-                chemicals[chemical][2],
-                'applicator',
-                'certification',
+                unit: chemicals[chemical].unit,
+                applicator: 'applicator',
+                certification: 'certification',
                 note,
-            ]);
+            });
         }
         navigate('/');
     });
@@ -97,14 +101,15 @@ export const RecordEntry: React.VFC = () => {
                 records.get('crop'),
                 records.get('chemical'),
             ]);
-            setFields(fields.rows.map(([_, name]) => name));
-            setCrops(crops.rows.map(([_, name]) => name));
-            setChemicals(chemicals.rows.reduce<Record<string, string[]>>((acc, row) => {
-                acc[row[1]] = row;
-                return acc;
-            }, {}));
+            setFields(fields.rows);
+            setCrops(crops.rows);
+            setChemicals(chemicals.rows);
         })();
     }, [records, setFields, setCrops]);
+
+    const onChange = (index: number) => (e: any) => {
+        setValue(`applications.${index}.amount`, chemicals[e.target.value].default);
+    }
 
     return (
         <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 grid-cols-2 md:grid-cols-4">
@@ -139,8 +144,8 @@ export const RecordEntry: React.VFC = () => {
                         <option disabled value="">
                             Select a field
                         </option>
-                        {fields.map(field => (
-                            <option key={field} value={field}>{field}</option>
+                        {Object.entries(fields).map(([id, field]) => (
+                            <option key={id} value={id}>{field.name}</option>
                         ))}
                     </Select>
                 </FormEntry>
@@ -149,8 +154,8 @@ export const RecordEntry: React.VFC = () => {
                         <option disabled value="">
                             Select a crop
                         </option>
-                        {crops.map(crop => (
-                            <option key={crop} value={crop}>{crop}</option>
+                        {Object.entries(crops).map(([id, crop]) => (
+                            <option key={id} value={id}>{crop.name}</option>
                         ))}
                     </Select>
                 </FormEntry>
@@ -171,12 +176,12 @@ export const RecordEntry: React.VFC = () => {
                             action={<Button onClick={() => remove(index)}>remove</Button>}
                         >
                             <div className="flex">
-                                <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemical`, { required: 'Missing chemical' })}>
+                        <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemical`, { required: 'Missing chemical', onChange: onChange(index) })}>
                                     <option disabled value="">
                                         Select a chemical
                                     </option>
-                                    {Object.keys(chemicals).map((chemical) => (
-                                        <option key={chemical} value={chemical}>{chemical}</option>
+                                    {Object.entries(chemicals).map(([id, chemical]) => (
+                                        <option key={id} value={id}>{chemical.name}</option>
                                     ))}
                                 </Select>
                             </div>
@@ -188,7 +193,7 @@ export const RecordEntry: React.VFC = () => {
                             <div className="flex">
                                 <Input type="number" className="w-full" {...register(`applications.${index}.amount`, { required: 'Missing amount' })} />
 
-                                <Input readOnly value={chemicals[formData.applications[index].chemical]?.[2] ?? ''} />
+                                <Input readOnly value={chemicals[formData.applications[index].chemical]?.unit ?? ''} />
                             </div>
                         </FormEntry>
                     </Card>

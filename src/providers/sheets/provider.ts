@@ -1,4 +1,5 @@
-import { RecordsProvider, Schema, RecordsSetupOptions, GetOptions, Paginated } from '../../records';
+import { RecordsProvider, Rows, Row, RecordsSetupOptions, GetOptions, Paginated } from '../../records';
+import { Schema } from '../../schema';
 import { log } from '../../app-store';
 import gapi from './../../gapi';
 
@@ -118,7 +119,7 @@ export class SheetsProvider extends RecordsProvider {
             });
             this.spreadsheetId = options.provider.spreadsheetId;
         } else {
-            const schema: Schema = {
+            const schema = {
                 ...options.schema,
                 query: {
                     columns: [''],
@@ -128,11 +129,11 @@ export class SheetsProvider extends RecordsProvider {
                 properties: {
                     title: `record sage - ${new Date().toLocaleString()}`
                 },
-                sheets: Object.entries(schema).map(([table, { columns, rows }]) => ({
+                sheets: Object.entries(schema).map(([table, { columns }]) => ({
                     properties: {
                         title: table,
                         gridProperties: {
-                            rowCount: (rows?.length ?? 0) + SheetsProvider.METADATA_OFFSET,
+                            rowCount: SheetsProvider.METADATA_OFFSET,
                             columnCount: columns.length,
                         },
                     },
@@ -148,13 +149,7 @@ export class SheetsProvider extends RecordsProvider {
                                         }
                                     }))
                                 }
-                            ].concat(rows?.map(row => ({
-                                values: row.map(value => ({
-                                    userEnteredValue: {
-                                        stringValue: String(value)
-                                    }
-                                }))
-                            })) ?? []),
+                            ],
                         },
                     ],
                 })),
@@ -164,15 +159,15 @@ export class SheetsProvider extends RecordsProvider {
         }
     });
 
-    insert = log('provider:insert', async (table: string, row: Array<string>) => {
+    insert = log('provider:insert', async <T extends keyof Schema>(table: T, row: Row<T>) => {
         const start = this.getA1Notation(1, 0);
-        const end = this.getA1Notation(1, row.length - 1);
+        const end = this.getA1Notation(1, this.schema[table].columns.length - 1);
         await this.api.client.sheets.spreadsheets.values.append({
             spreadsheetId: this.spreadsheetId,
             valueInputOption: 'USER_ENTERED',
             insertDataOption: 'INSERT_ROWS',
             range: SheetsProvider.range(table, start, end),
-            values: [row],
+            values: [Object.values(row)],
         });
     });
 
@@ -214,7 +209,7 @@ export class SheetsProvider extends RecordsProvider {
         return isNaN(index) ? -1 : index;
     }
 
-    get = log('provider:get', async (table: string, options: GetOptions): Promise<Paginated<string[][]>> => {
+    get = log('provider:get', async <T extends keyof Schema>(table: T, options: GetOptions): Promise<Paginated<Rows<T>>> => {
         const rowCount = await this.getRowCount(table);
         if (rowCount > 0) {
             const { columns } = this.schema[table];
@@ -234,14 +229,14 @@ export class SheetsProvider extends RecordsProvider {
             });
             const { values } = JSON.parse(body);
             return {
-                rows: values.reverse(),
+                rows: this.convertToRows(table, values),
                 total: rowCount,
                 limit,
                 offset,
             };
         } else {
             return {
-                rows: [],
+                rows: {},
                 total: 0,
                 limit: 0,
                 offset: 0,
@@ -249,10 +244,10 @@ export class SheetsProvider extends RecordsProvider {
         }
     });
 
-    find = log('provider:find', async (table: string, id: string) => {
+    find = log('provider:find', async <T extends keyof Schema>(table: T, id: string): Promise<any> => {
         const rowIndex = await this.getIndexById(table, id);
         if (rowIndex === -1) {
-            return [];
+            return;
         }
         const { columns } = this.schema[table];
         const start = this.getA1Notation(rowIndex, 0);
@@ -264,10 +259,10 @@ export class SheetsProvider extends RecordsProvider {
             range: SheetsProvider.range(table, start, end),
         });
         const { values } = JSON.parse(body);
-        return values[0];
+        return this.convertToRow(table, values[0]);
     });
 
-    query = log('provider:query', async (table: string, query: string) => {
+    query = log('provider:query', async <T extends keyof Schema>(table: T, query: string) => {
         const { columns } = this.schema[table];
         const rowCount = await this.getRowCount(table);
         const start = this.getA1Notation(0, 0);
@@ -282,7 +277,7 @@ export class SheetsProvider extends RecordsProvider {
             includeValuesInResponse: true,
         });
         const data = JSON.parse(body);
-        return data.updatedData.values;
+        return this.convertToRows(table, data.updatedData.values);
     });
 
     delete = log('provider:delete', async (table: string, id: string) => {
@@ -306,6 +301,20 @@ export class SheetsProvider extends RecordsProvider {
             ]
         });
     });
+
+    convertToRow = <T extends keyof Schema>(table: T, row: string[]): Row<T> => {
+        const columns = this.schema[table].columns as readonly string[];
+        return columns.reduce<Record<string, string>>((acc, column, index) => {
+            acc[column] = row[index];
+            return acc;
+        }, {}) as Row<T>;
+    };
+
+    convertToRows = <T extends keyof Schema>(table: T, rows: string[][]) => rows.reduce<Rows<T>>((acc, r) => {
+        const row = this.convertToRow(table, r);
+        acc[row.id] = row;
+        return acc;
+    }, {});
 
     generateCloneUrl = () => `${window.origin}/record-sage?spreadsheetId=${this.spreadsheetId}`;
 

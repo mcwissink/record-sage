@@ -1,4 +1,5 @@
-import { Paginated, GetOptions, Schema } from "./records";
+import { Paginated, GetOptions, Rows, Row } from './records';
+import { Schema } from './schema';
 import { log } from './app-store';
 
 export enum JournalAction {
@@ -10,14 +11,14 @@ interface JournalPayload<Action extends JournalAction, Payload> {
     action: Action;
     payload: Payload;
     id: string;
-    table: string;
+    table: keyof Schema;
 }
 
 type JournalEntry =
-    | JournalPayload<JournalAction.Insert, string[]>
+    | JournalPayload<JournalAction.Insert, Record<string, string>>
     | JournalPayload<JournalAction.Delete, string>
 
-type DatabaseSchema = Schema<IDBObjectStoreParameters | undefined>
+type DatabaseSchema = any;
 class Database {
     private _db?: IDBDatabase;
     constructor(
@@ -83,7 +84,7 @@ class Database {
             .delete(id)
     ));
 
-    reset = log('db:reset', async (table: string, rows: Record<string, any>[]) => this.transaction(table, (store) => {
+    reset = log('db:reset', async (table: string, rows: Array<Record<string, any>>) => this.transaction(table, (store) => {
         store.clear();
         rows.forEach(row => store.add(row))
     }));
@@ -160,8 +161,8 @@ export class Cache {
         await this.journal.connect();
     });
 
-    insert = async (table: string, row: string[]) => {
-        await this.db.insert(table, this.convertRowArray(table, row))
+    insert = async <T extends keyof Schema>(table: T, row: Row<T>) => {
+        await this.db.insert(table, row)
         await this.journal.insert({
             payload: row,
             table,
@@ -169,25 +170,21 @@ export class Cache {
         });
     }
 
-    get = async (table: string, options?: GetOptions): Promise<Paginated<string[][]>> => {
+    get = async <T extends keyof Schema>(table: T, options?: GetOptions): Promise<Paginated<Rows<T>>> => {
         const records = await this.db.get(table);
         const limit = options ? options.limit : records.length
         const offset = options ? options.offset : 0;
         return {
-            rows: records
-                .slice(offset, offset + limit)
-                .map(this.convertRowObject),
+            rows: this.convertToRows(records.slice(offset, offset + limit)),
             total: records.length,
             limit,
             offset,
         }
     }
 
-    find = async (table: string, id: string): Promise<string[]> => this.convertRowObject(
-        await this.db.find(table, id),
-    );
+    find = async <T extends keyof Schema>(table: T, id: string): Promise<Row<T>> => await this.db.find(table, id) as Row<T>;
 
-    delete = async (table: string, id: string) => {
+    delete = async <T extends keyof Schema>(table: T, id: string) => {
         await this.db.delete(table, id);
         await this.journal.insert({
             payload: id,
@@ -218,15 +215,10 @@ export class Cache {
         await this.journal.disconnect();
     }
 
-    reset = async (table: string, rows: string[][]) => this.db.reset(table, rows.map((row) => this.convertRowArray(table, row)));
+    reset = async <T extends keyof Schema>(table: T, rows: Rows<T>) => this.db.reset(table, Object.values(rows));
 
-    private convertRowArray = (table: string, row: string[]): Record<string, any> => {
-        const { columns } = this.schema[table];
-        return columns.reduce<Record<string, string>>((rowObject, column, index) => {
-            rowObject[column] = row[index];
-            return rowObject;
-        }, {});
-    }
-
-    private convertRowObject = (row: Record<string, string>) => Object.values(row);
+    private convertToRows = <T extends keyof Schema>(rows: Array<Record<string, string>>) => rows.reduce<Rows<T>>((acc, row) => {
+        acc[row.id] = row as Row<T>;
+        return acc;
+    }, {});
 }

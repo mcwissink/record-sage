@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { Rows, Row } from './records';
 import { useRecords } from './records-store';
-import { schema } from './schema';
+import { schema, Schema } from './schema';
 import { useLoading } from './use-loading';
 import { Button } from './ui/Button';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -16,16 +17,24 @@ interface Form {
     }>
 }
 
+const flatten = <T extends keyof Schema>(rows: Rows<T>): string[][] => Object.values(rows).map(Object.values);
+
 export const Manage: React.VFC = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
-    const [table, setTable] = useState(Object.keys(schema)[0]);
-    const [data, setData] = useState<Paginated<string[][]>>({
+    const [table, setTable] = useState<keyof Schema>('chemical-application');
+    const [data, setDataWrapped] = useState<Paginated<string[][]>>({
         rows: [],
         total: 0,
         limit: 0,
         offset: 0,
     });
+
+    const setData = <T extends keyof Schema>(data: Paginated<Rows<T>>) => setDataWrapped({
+        ...data,
+        rows: flatten(data.rows),
+    });
+
     const { rows } = data;
     const parameters = {
         limit: Number(params.get('limit') ?? 5),
@@ -69,7 +78,10 @@ export const Manage: React.VFC = () => {
     }, [records, table, setData, setIsSyncing]);
 
     const onSubmit = async (form: Form) => {
-        await records.insert(table, form.columns.map((column) => column.value));
+        await records.insert(table, form.columns.reduce<Record<string, string>>((acc, column, index) => {
+            acc[schema[table].columns[index + 1]] = column.value;
+            return acc;
+        }, {}) as Row<typeof table>);
         records.get(table, parameters).then(setData);
         resetForm();
     };
@@ -85,7 +97,7 @@ export const Manage: React.VFC = () => {
         <div className="flex flex-col gap-4">
             <div className="w-full">
                 <Select defaultValue={'empty'} className="w-full md:w-auto" onChange={e => {
-                    setTable(e.target.value)
+                    setTable(e.target.value as keyof Schema)
                     navigate('', { replace: true });
                 }}>
                     {Object.keys(schema).map((table) => (

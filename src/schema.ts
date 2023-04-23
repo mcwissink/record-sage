@@ -1,8 +1,7 @@
-import { Schema } from "./records";
-
-export const schema: Schema = {
+export const schema = {
     'chemical-application': {
         columns: ['id', 'date', 'field', 'crop', 'acres', 'chemical', 'registration', 'amount', 'unit', 'applicator', 'certification', 'note'],
+        cache: false,
     },
     'chemical': {
         columns: ['id', 'name', 'unit', 'registration', 'default'],
@@ -20,4 +19,6 @@ export const schema: Schema = {
         columns: ['id', 'name', 'certification'],
         cache: true,
     },
-};
+} as const;
+
+export type Schema = typeof schema;

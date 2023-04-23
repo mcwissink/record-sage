@@ -2,14 +2,8 @@ import React from 'react';
 import { log } from './app-store';
 import { v4 as uuid } from 'uuid';
 import { Cache, JournalAction } from './cache';
+import { Schema } from './schema';
 import { online } from './utils/online';
-
-export type Schema<T = any> = Record<string, {
-    columns: string[];
-    cache?: true;
-    rows?: Array<Array<number | string>>;
-    options?: T;
-}>;
 
 export type Provider = {
     RecordsProvider: RecordsProvider;
@@ -25,10 +19,18 @@ export interface Pagination {
 
 export type GetOptions = Pagination | null;
 
-export interface Paginated<Rows> extends Pagination {
-    rows: Rows;
+export interface Paginated<T> extends Pagination {
+    rows: T;
     total: number;
 }
+
+export type PartialRow<T extends keyof Schema> = {
+    [C in Schema[T]['columns'][number]]: string;
+}
+
+export type Row<T extends keyof Schema> = PartialRow<T> & { id: string };
+
+export type Rows<T extends keyof Schema> = Record<string, Row<T>>;
 
 export class Records {
     private static SCHEMA_KEY = 'schema';
@@ -84,7 +86,8 @@ export class Records {
 
         await this.cache.connect(schema);
         await this.provider.setup({ ...options, schema });
-        await Promise.all(Object.keys(this.schema).map(this.syncTable));
+        const tables = Object.keys(this.schema) as Array<keyof Schema>;
+        await Promise.all(tables.map(this.syncTable));
     });
 
     disconnect = log('records:disconnect', async () => {
@@ -100,37 +103,40 @@ export class Records {
         return await this.provider.logout();
     });
 
-    insert = log('records:insert', async (table: string, row: Array<string>) => {
-        await this.cache.insert(table, [this.generateId()].concat(row));
+    insert = log('records:insert', async <T extends keyof Schema>(table: T, row: Omit<Row<T>, 'id'>) => {
+        await this.cache.insert(table, {
+            id: this.generateId(),
+            ...row,
+        } as Row<T>);
         const response = online(this.sync)();
         if (!this.schema[table].cache) {
             await response;
         }
     });
 
-    get = log('records:get', async (table: string, options?: GetOptions): Promise<Paginated<string[][]>> => {
+    get = log('records:get', async <T extends keyof Schema>(table: T, options?: GetOptions): Promise<Paginated<Rows<T>>> => {
         const cache = await this.cache.get(table, options);
         return this.schema[table].cache ? cache : await online(this.provider.get, cache)(table, options);
     });
 
-    find = log('records:find', async (table: string, id: string): Promise<string[]> => {
-        return await online(this.provider.find, [])(table, id);
+    find = log('records:find', async <T extends keyof Schema>(table: T, id: string): Promise<Row<T> | undefined> => {
+        return await online(this.provider.find, undefined)(table, id);
     });
 
-    query = log('records:query', async (table: string, query: string): Promise<string[][]> => {
-        return await online(this.provider.query, [])(table, query);
+    query = log('records:query', async <T extends keyof Schema>(table: T, query: string): Promise<Rows<T>> => {
+        return await online(this.provider.query, {})(table, query);
     });
 
     private generateId() {
         return uuid();
     }
 
-    delete = log('records:delete', async (table: string, id: string) => {
+    delete = log('records:delete', async <T extends keyof Schema>(table: T, id: string) => {
         await this.cache.delete(table, id);
         online(this.sync)();
     });
 
-    private syncTable = async (table: string) => {
+    private syncTable = async <T extends keyof Schema>(table: T) => {
         const { rows } = await this.provider.get(
             table,
             this.schema[table].cache ? null : { limit: 5, offset: 0 }
@@ -144,7 +150,7 @@ export class Records {
             try {
                 switch (entry.action) {
                     case JournalAction.Insert:
-                        await log(`sync:inserting:${entry.id}`, this.provider.insert)(entry.table, entry.payload);
+                        await log(`sync:inserting:${entry.id}`, this.provider.insert)(entry.table, entry.payload as Row<typeof entry.table>);
                         break;
                     case JournalAction.Delete:
                         await log(`sync:deleting:${entry.id}`, this.provider.delete)(entry.table, entry.payload);
@@ -155,7 +161,7 @@ export class Records {
                 console.error(error);
                 return false;
             }
-        });
+        }) as Array<keyof Schema>;
         await Promise.all(updates.map(this.syncTable));
 
         window.dispatchEvent(new Event('records:synced'));
@@ -195,16 +201,16 @@ export class RecordsProvider {
     async logout() {
         return await this.isAuthenticated();
     }
-    async insert(_table: string, _row: Array<string>) {
+    async insert<T extends keyof Schema>(_table: T, _row: Row<T>) {
         throw new Error(`'insert' is not implemented`);
     }
-    async get(_table: string, _options?: GetOptions): Promise<Paginated<string[][]>> {
+    async get<T extends keyof Schema>(_table: string, _options?: GetOptions): Promise<Paginated<Rows<T>>> {
         throw new Error(`'get' is not implemented`);
     }
-    async find(_table: string, _id: string): Promise<string[]> {
+    async find<T extends keyof Schema>(_table: string, _id: string): Promise<Row<T>> {
         throw new Error(`'find' is not implemented`);
     }
-    async query(_table: string, _query: string): Promise<string[][]> {
+    async query<T extends keyof Schema>(_table: string, _query: string): Promise<Rows<T>> {
         throw new Error(`'query' is not implemented`);
     }
     async update(_table: string): Promise<any> {
