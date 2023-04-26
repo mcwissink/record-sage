@@ -265,6 +265,14 @@ export class SheetsProvider extends RecordsProvider {
     query = log('provider:query', async <T extends keyof Schema>(table: T, query: string) => {
         const { columns } = this.schema[table];
         const rowCount = await this.getRowCount(table);
+        if (!rowCount) {
+            return {
+                rows: {},
+                total: 0,
+                limit: 0,
+                offset: 0,
+            };
+        }
         const start = this.getA1Notation(0, 0);
         const end = this.getA1Notation(1 + rowCount, columns.length - 1);
         const queryStart = this.getA1Notation(1, 0);
