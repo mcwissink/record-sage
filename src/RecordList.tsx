@@ -4,6 +4,7 @@ import { Paginated, Rows } from "./records"
 import { useRecords } from "./records-store";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
+import { Pagination } from './ui/Pagination';
 import { Progress } from "./ui/Progress";
 import { useLoading } from "./use-loading";
 import { useNavigate } from "react-router-dom";
@@ -20,13 +21,11 @@ export const RecordList: React.VFC = () => {
         offset: 0,
     });
     const { records } = useRecords();
-    const parameters = {
-        limit: Number(params.get('limit') ?? 20),
-        offset: Number(params.get('offset') ?? 0),
-    }
+    const limit = Number(params.get('limit') ?? 20);
+    const offset = Number(params.get('offset') ?? 0);
 
     useEffect(() => {
-        loading(records.query)('chemical-application', `SELECT * ORDER BY B DESC`).then(setData);
+        loading(records.query)('chemical-application', `SELECT * ORDER BY B DESC LIMIT ${limit} OFFSET ${offset}`).then(setData);
     }, [records, params]);
 
     const onDuplicateRows = (rows: Rows<'chemical-application'>) => () => {
@@ -71,6 +70,11 @@ export const RecordList: React.VFC = () => {
                         ))}
                     </React.Fragment>
                 ))}
+                <Pagination
+                    offset={offset}
+                    total={data.total}
+                    limit={limit}
+                />
             </div>
         </div>
     )

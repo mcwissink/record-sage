@@ -35,7 +35,6 @@ export const Manage: React.VFC = () => {
         rows: flatten(data.rows),
     });
 
-    const { rows } = data;
     const parameters = {
         limit: Number(params.get('limit') ?? 5),
         offset: Number(params.get('offset') ?? 0),
@@ -117,7 +116,7 @@ export const Manage: React.VFC = () => {
                         </tr>
                     </thead>
                     <tbody className="contents">
-                        {rows.map((row) => (
+                        {data.rows.map((row) => (
                             <tr key={row[0]} className="contents">
                                 {row.map((cell, index) =>
                                     <td key={index} className="truncate">{index ? cell : cell.slice(0, 8)}</td>
@@ -140,7 +139,9 @@ export const Manage: React.VFC = () => {
                 </table>
             </form>
             <Pagination
-                {...data}
+                offset={data.offset}
+                total={data.total}
+                limit={data.limit}
             />
         </div >
     );
