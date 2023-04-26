@@ -267,7 +267,7 @@ export class SheetsProvider extends RecordsProvider {
         const rowCount = await this.getRowCount(table);
         const start = this.getA1Notation(0, 0);
         const end = this.getA1Notation(1 + rowCount, columns.length - 1);
-        const queryStart = this.getA1Notation(1, 0);
+        const queryStart = this.getA1Notation(0, 0);
         const queryEnd = this.getA1Notation(1 + rowCount, columns.length - 1);
         const { body } = await this.api.client.sheets.spreadsheets.values.update({
             spreadsheetId: this.spreadsheetId,
@@ -277,8 +277,9 @@ export class SheetsProvider extends RecordsProvider {
             includeValuesInResponse: true,
         });
         const data = JSON.parse(body);
+        const [header, ...rows] = data.updatedData.values;
         return {
-            rows: this.convertToRows(table, data.updatedData.values),
+            rows: this.convertToRows(table, rows),
             total: rowCount,
             limit: 0,
             offset: 0,
