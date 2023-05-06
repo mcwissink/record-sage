@@ -72,9 +72,17 @@ export const RecordEntry: React.VFC = () => {
     });
 
     const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications, note }) => {
+        const application = await records.insert('application', {
+            date,
+            title: 'application', 
+            applicator: 'applicator',
+            certification: 'certification',
+            note,
+        });
         for (const { chemical, amount } of applications) {
+            
             await records.insert('chemical-application', {
-                date,
+                application: application.id,
                 field: fields[field].name,
                 crop: crops[crop].name,
                 acres,
@@ -82,9 +90,6 @@ export const RecordEntry: React.VFC = () => {
                 registration: chemicals[chemical].registration,
                 amount,
                 unit: chemicals[chemical].unit,
-                applicator: 'applicator',
-                certification: 'certification',
-                note,
             });
         }
         navigate('/');

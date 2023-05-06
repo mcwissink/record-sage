@@ -14,7 +14,7 @@ export const RecordList: React.VFC = () => {
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const { isLoading, loading } = useLoading();
-    const [data, setData] = useState<Paginated<Rows<'chemical-application'>>>({
+    const [data, setData] = useState<Paginated<Rows<'application'>>>({
         rows: {},
         total: 0,
         limit: 0,
@@ -25,14 +25,14 @@ export const RecordList: React.VFC = () => {
     const offset = Number(params.get('offset') ?? 0);
 
     useEffect(() => {
-        loading(records.query)('chemical-application', `SELECT * ORDER BY B DESC LIMIT ${limit} OFFSET ${offset}`).then(setData);
-    }, [records, params]);
+        loading(records.query)('application', `SELECT * ORDER BY B DESC LIMIT ${limit} OFFSET ${offset}`).then(setData);
+    }, [records, params, limit, offset, loading]);
 
-    const onDuplicateRows = (rows: Rows<'chemical-application'>) => () => {
+    const onDuplicateRows = (rows: Rows<'application'>) => () => {
         navigate('records/add', { state: { rows } });
     };
 
-    const rowsByDate = Object.entries(data.rows).reduce<Record<string, Rows<'chemical-application'>>>((acc, [id, row]) => {
+    const rowsByDate = Object.entries(data.rows).reduce<Record<string, Rows<'application'>>>((acc, [id, row]) => {
         if (acc[row.date]) {
             acc[row.date][id] = row;
         } else {
@@ -58,11 +58,7 @@ export const RecordList: React.VFC = () => {
                             <Link key={id} to={`/records/${id}`} className="no-underline">
                                 <Card className="flex items-center hover:bg-gray-200 cursor-pointer">
                                     <div className="grid gap-1 grid-cols-1 md:grid-cols-2 w-full">
-                                        <Label label="field">{row.field}</Label>
-                                        <Label label="crop">{row.crop}</Label>
-                                        <Label label="acres">{row.acres}</Label>
-                                        <Label label="chemical">{row.chemical} [{row.registration}]</Label>
-                                        <Label label="amount">{row.amount}</Label>
+                                        <Label label="note">{row.id}</Label>
                                         <Label label="note">{row.note}</Label>
                                     </div>
                                 </Card>

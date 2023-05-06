@@ -104,14 +104,16 @@ export class Records {
     });
 
     insert = log('records:insert', async <T extends keyof Schema>(table: T, row: Omit<Row<T>, 'id'>) => {
-        await this.cache.insert(table, {
+        const rowWithId = {
             id: this.generateId(),
             ...row,
-        } as Row<T>);
+        } as Row<T>
+        await this.cache.insert(table, rowWithId);
         const response = online(this.sync)();
         if (!this.schema[table].cache) {
             await response;
         }
+        return rowWithId;
     });
 
     get = log('records:get', async <T extends keyof Schema>(table: T, options?: GetOptions): Promise<Paginated<Rows<T>>> => {

@@ -1,6 +1,10 @@
 export const schema = {
+    'application': {
+        columns: ['id', 'title', 'date', 'applicator', 'certification', 'note'],
+        cache: false,
+    },
     'chemical-application': {
-        columns: ['id', 'date', 'field', 'crop', 'acres', 'chemical', 'registration', 'amount', 'unit', 'applicator', 'certification', 'note'],
+        columns: ['id', 'application', 'field', 'crop', 'acres', 'chemical', 'registration', 'amount', 'unit'],
         cache: false,
     },
     'chemical': {
