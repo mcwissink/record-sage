@@ -31,6 +31,8 @@ const isRows = (state: any): state is { rows: Rows<'chemical-application'>} => s
 
 export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
+    const [isAdding, setIsAdding] = useState(false);
+    const [chemicalApplications, setChemicalApplications] = useState<any[]>([]);
     const { state } = useLocation();
     const [fields, setFields] = useState<Rows<'field'>>({});
     const [crops, setCrops] = useState<Rows<'crop'>>({});
@@ -63,12 +65,6 @@ export const RecordEntry: React.VFC = () => {
                 }],
             } : {})
         }
-    });
-    const formData = watch();
-
-    const { fields: formFields, append, remove } = useFieldArray({
-        control,
-        name: 'applications',
     });
 
     const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications, note }) => {
@@ -112,16 +108,30 @@ export const RecordEntry: React.VFC = () => {
         })();
     }, [records, setFields, setCrops]);
 
-    const onChange = (index: number) => (e: any) => {
-        setValue(`applications.${index}.amount`, chemicals[e.target.value].default);
+    if (isAdding) {
+        return (
+            <ChemicalApplicationForm
+                fields={fields}
+                crops={crops}
+                chemicals={chemicals}
+                onCancel={() => setIsAdding(false)}
+                onSubmit={({ applications, ...data }) => {
+                    setChemicalApplications([
+                        ...applications.map((application: any) => ({
+                            ...application,
+                            data,
+                        })),
+                        ...chemicalApplications,
+                    ]);
+                    setIsAdding(false);
+                }}
+            />
+        );
     }
 
     return (
         <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            <div
-                className={cn('contents', {
-                })}
-            >
+            <div className={cn('contents')}>
                 <div className="flex justify-between items-end col-span-full">
                     <b>Application</b>
                     <Button
@@ -144,8 +154,86 @@ export const RecordEntry: React.VFC = () => {
                 <FormEntry className="col-span-2" label="date">
                     <Input type="date" className="w-full" {...register('date', { required: 'Missing date' })} />
                 </FormEntry>
+                <hr className="w-full col-span-full" />
+            </div>
+            <div className={cn('contents')}>
+                <Title>Chemical Applications</Title>
+                <Button onClick={() => setIsAdding(!isAdding)}>add</Button>
+                {chemicalApplications.map((chemicalApplication) => (
+                    <Card>
+                        {JSON.stringify(chemicalApplication)}
+                    </Card>
+                ))}
+                <hr className="w-full col-span-full" />
+            </div>
+            <div
+                className={cn('contents', {
+                })}
+            >
+                <Title>Note</Title>
+                <textarea className="col-span-full" {...register('note')} />
+                <hr className="w-full col-span-full" />
+            </div>
+            <div className="col-span-full text-red-700">
+                {Object.entries(errors).map(([field, error]) => (
+                    <div key={field}>{error.message}</div>
+                ))}
+            </div>
+            <Button
+                onClick={onSubmit}
+                type="submit"
+                loading={isSubmitting}
+                className="col-span-full md:w-36"
+            >
+                complete
+            </Button>
+        </form>
+    )
+}
+
+interface Props {
+    fields: Rows<'field'>
+    crops: Rows<'crop'>
+    chemicals: Rows<'chemical'>
+    onCancel: () => void;
+    onSubmit: (data: any) => void;
+}
+
+export const ChemicalApplicationForm: React.VFC<Props> = ({
+    fields,
+    crops,
+    chemicals,
+    onCancel,
+    onSubmit,
+}) => {
+    const {
+        register,
+        handleSubmit,
+        control,
+        setValue,
+        watch,
+        formState: { errors }
+    } = useForm<Form>();
+
+    const formData = watch();
+
+    const { fields: formFields, append, remove } = useFieldArray({
+        control,
+        name: 'applications',
+    });
+
+    const onChange = (index: number) => (e: any) => {
+        setValue(`applications.${index}.amount`, chemicals[e.target.value].default);
+    }
+
+    return (
+        <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            <div
+                className={cn('contents', {
+                })}
+            >
                 <FormEntry className="col-span-2" label="field">
-                     <Select defaultValue="" className="w-full" {...register('field', { required: 'Missing field' })}>
+                    <Select defaultValue="" className="w-full" {...register('field', { required: 'Missing field' })}>
                         <option disabled value="">
                             Select a field
                         </option>
@@ -218,30 +306,28 @@ export const RecordEntry: React.VFC = () => {
                 </Card>
                 <hr className="w-full col-span-full" />
             </div>
-            <div
-                className={cn('contents', {
-                })}
-            >
-                <Title>Note</Title>
-                <textarea className="col-span-full" {...register('note')} />
-                <hr className="w-full col-span-full" />
-            </div>
             <div className="col-span-full text-red-700">
                 {Object.entries(errors).map(([field, error]) => (
                     <div key={field}>{error.message}</div>
                 ))}
             </div>
             <Button
-                onClick={onSubmit}
-                type="submit"
-                loading={isSubmitting}
+                onClick={handleSubmit(onSubmit)}
+                type="button"
                 className="col-span-full md:w-36"
             >
-                complete
+                submit 
+            </Button>
+            <Button
+                onClick={onCancel}
+                type="button"
+                className="col-span-full md:w-36"
+            >
+                cancel
             </Button>
         </form>
-    )
-}
+    );
+};
 
 export const FormEntry: React.FC<React.ComponentPropsWithoutRef<'div'> & {
     label: string;
