@@ -7,6 +7,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
+import { Table } from './ui/Table';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from './ui/Card';
 
@@ -44,10 +45,7 @@ export const RecordEntry: React.VFC = () => {
     const {
         reset,
         register,
-        control,
         handleSubmit,
-        watch,
-        setValue,
         formState: { isSubmitting, errors }
     } = useForm<Form>({
         defaultValues: {
@@ -67,7 +65,7 @@ export const RecordEntry: React.VFC = () => {
         }
     });
 
-    const onSubmit = handleSubmit(async ({ date, field, crop, acres, applications, note }) => {
+    const onSubmit = handleSubmit(async ({ date, note }) => {
         const application = await records.insert('application', {
             date,
             title: 'application', 
@@ -75,8 +73,7 @@ export const RecordEntry: React.VFC = () => {
             certification: 'certification',
             note,
         });
-        for (const { chemical, amount } of applications) {
-            
+        for (const { chemical, amount, field, crop, acres } of chemicalApplications) {
             await records.insert('chemical-application', {
                 application: application.id,
                 field: fields[field].name,
@@ -119,7 +116,7 @@ export const RecordEntry: React.VFC = () => {
                     setChemicalApplications([
                         ...applications.map((application: any) => ({
                             ...application,
-                            data,
+                            ...data,
                         })),
                         ...chemicalApplications,
                     ]);
@@ -159,11 +156,7 @@ export const RecordEntry: React.VFC = () => {
             <div className={cn('contents')}>
                 <Title>Chemical Applications</Title>
                 <Button onClick={() => setIsAdding(!isAdding)}>add</Button>
-                {chemicalApplications.map((chemicalApplication) => (
-                    <Card>
-                        {JSON.stringify(chemicalApplication)}
-                    </Card>
-                ))}
+                <Table className="col-span-full" data={chemicalApplications} />
                 <hr className="w-full col-span-full" />
             </div>
             <div
