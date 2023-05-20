@@ -22,7 +22,7 @@ const flatten = <T extends keyof Schema>(rows: Rows<T>): string[][] => Object.va
 export const Manage: React.VFC = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
-    const [table, setTable] = useState<keyof Schema>('chemical-application');
+    const table: keyof Schema = params.get('table') as keyof Schema ?? 'chemical-application';
     const [data, setDataWrapped] = useState<Paginated<string[][]>>({
         rows: [],
         total: 0,
@@ -96,8 +96,7 @@ export const Manage: React.VFC = () => {
         <div className="flex flex-col gap-4">
             <div className="w-full">
                 <Select defaultValue={'empty'} className="w-full md:w-auto" onChange={e => {
-                    setTable(e.target.value as keyof Schema)
-                    navigate('', { replace: true });
+                    navigate({ search: new URLSearchParams({ table: e.target.value }).toString() })
                 }}>
                     {Object.keys(schema).map((table) => (
                         <option key={table} value={table}>{table}</option>

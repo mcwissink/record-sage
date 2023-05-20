@@ -30,6 +30,14 @@ const DEFAULT_FIELDS = {
 
 const isRows = (state: any): state is { rows: Rows<'chemical-application'>} => state && 'rows' in state;
 
+interface ChemicalApplication {
+    field: string;
+    crop: string;
+    acres: string;
+    chemical: string;
+    amount: string;
+}
+
 export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
     const [isAdding, setIsAdding] = useState(false);
@@ -112,12 +120,9 @@ export const RecordEntry: React.VFC = () => {
                 crops={crops}
                 chemicals={chemicals}
                 onCancel={() => setIsAdding(false)}
-                onSubmit={({ applications, ...data }) => {
+                onSubmit={(data) => {
                     setChemicalApplications([
-                        ...applications.map((application: any) => ({
-                            ...application,
-                            ...data,
-                        })),
+                        ...data,
                         ...chemicalApplications,
                     ]);
                     setIsAdding(false);
@@ -156,7 +161,7 @@ export const RecordEntry: React.VFC = () => {
             <div className={cn('contents')}>
                 <Title>Chemical Applications</Title>
                 <Button onClick={() => setIsAdding(!isAdding)}>add</Button>
-                <Table className="col-span-full" data={chemicalApplications} />
+                <Table className="col-span-full" columns={['field', 'crop', 'acres', 'chemical', 'amount']} data={chemicalApplications} />
                 <hr className="w-full col-span-full" />
             </div>
             <div
@@ -192,6 +197,16 @@ interface Props {
     onSubmit: (data: any) => void;
 }
 
+interface ChemicalApplicationFields {
+    field: string;
+    crop: string;
+    acres: string;
+    applications: Array<{
+        chemical: string;
+        amount: string;
+    }>
+}
+
 export const ChemicalApplicationForm: React.VFC<Props> = ({
     fields,
     crops,
@@ -206,7 +221,7 @@ export const ChemicalApplicationForm: React.VFC<Props> = ({
         setValue,
         watch,
         formState: { errors }
-    } = useForm<Form>();
+    } = useForm<ChemicalApplicationFields>();
 
     const formData = watch();
 
@@ -221,10 +236,7 @@ export const ChemicalApplicationForm: React.VFC<Props> = ({
 
     return (
         <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            <div
-                className={cn('contents', {
-                })}
-            >
+            <div className="contents">
                 <FormEntry className="col-span-2" label="field">
                     <Select defaultValue="" className="w-full" {...register('field', { required: 'Missing field' })}>
                         <option disabled value="">
@@ -250,53 +262,33 @@ export const ChemicalApplicationForm: React.VFC<Props> = ({
                 </FormEntry>
                 <hr className="w-full col-span-full" />
             </div>
-            <div
-                className={cn('contents', {
-                })}
-            >
+            <div className="contents">
                 <Title>Chemicals</Title>
                 {formFields.map((application, index) => (
-                    <Card key={application.id} className="col-span-2">
-                        <FormEntry
-                            label="chemical"
-                            action={<Button onClick={() => remove(index)}>remove</Button>}
-                        >
-                            <div className="flex">
-                        <Select defaultValue="" className="w-full" {...register(`applications.${index}.chemical`, { required: 'Missing chemical', onChange: onChange(index) })}>
-                                    <option disabled value="">
-                                        Select a chemical
-                                    </option>
-                                    {Object.entries(chemicals).map(([id, chemical]) => (
-                                        <option key={id} value={id}>{chemical.name}</option>
-                                    ))}
-                                </Select>
-                            </div>
+                    <Card key={application.id} className="grid gap-4 col-span-full md:grid-cols-[1fr_1fr_max-content]">
+                        <FormEntry label="chemical">
+                            <Select className="w-full" {...register(`applications.${index}.chemical`, { required: 'Missing chemical', onChange: onChange(index) })}>
+                                <option disabled value="">
+                                    Select a chemical
+                                </option>
+                                {Object.entries(chemicals).map(([id, chemical]) => (
+                                    <option key={id} value={id}>{chemical.name}</option>
+                                ))}
+                            </Select>
                         </FormEntry>
-                        <FormEntry
-                            label="amount"
-                            className="col-span-2"
-                        >
+                        <FormEntry label="amount">
                             <div className="flex">
-                                <Input type="number" className="w-full" {...register(`applications.${index}.amount`, { required: 'Missing amount' })} />
+                                <Input type="number" className="grow" {...register(`applications.${index}.amount`, { required: 'Missing amount' })} />
 
                                 <Input readOnly value={chemicals[formData.applications[index].chemical]?.unit ?? ''} />
                             </div>
                         </FormEntry>
+                        <FormEntry label="action">
+                            <Button onClick={() => remove(index)}>remove</Button>
+                        </FormEntry>
                     </Card>
                 ))}
-                <Card className="relative col-span-2" onClick={() => append({ chemical: '', amount: '' })}>
-                    <span className="inset-0 absolute flex justify-center items-center">add</span>
-
-                    <FormEntry label="chemical" className="invisible">
-                        <div className="flex">
-                            <Select defaultValue="" className="w-full" />
-                            <Input />
-                        </div>
-                    </FormEntry>
-                    <FormEntry label="amount" className="invisible">
-                        <Input type="number" />
-                    </FormEntry>
-                </Card>
+                <Button onClick={() => append({ chemical: '', amount: '' })}>add</Button>
                 <hr className="w-full col-span-full" />
             </div>
             <div className="col-span-full text-red-700">
@@ -305,7 +297,22 @@ export const ChemicalApplicationForm: React.VFC<Props> = ({
                 ))}
             </div>
             <Button
-                onClick={handleSubmit(onSubmit)}
+                onClick={handleSubmit((data) => {
+                    const {
+                        field,
+                        crop,
+                        acres,
+                        applications,
+                    } = data;
+
+                    onSubmit(applications.map(({ chemical, amount }) => ({
+                        field,
+                        crop,
+                        acres,
+                        chemical,
+                        amount,
+                    })));
+                })}
                 type="button"
                 className="col-span-full md:w-36"
             >
