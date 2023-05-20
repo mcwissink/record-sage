@@ -6,9 +6,9 @@ import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import { Pagination } from './ui/Pagination';
 import { Progress } from "./ui/Progress";
+import { Stringify } from "./ui/Stringify";
 import { useLoading } from "./use-loading";
 import { useNavigate } from "react-router-dom";
-import { Label } from "./RecordView";
 
 export const RecordList: React.VFC = () => {
     const navigate = useNavigate();
@@ -57,10 +57,7 @@ export const RecordList: React.VFC = () => {
                         {Object.entries(rows).map(([id, row]) => (
                             <Link key={id} to={`/records/${id}`} className="no-underline">
                                 <Card className="flex items-center hover:bg-gray-200 cursor-pointer">
-                                    <div className="grid gap-1 grid-cols-1 md:grid-cols-2 w-full">
-                                        <Label label="note">{row.id}</Label>
-                                        <Label label="note">{row.note}</Label>
-                                    </div>
+                                    <Stringify data={row} />
                                 </Card>
                             </Link>
                         ))}

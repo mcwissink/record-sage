@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useSearchParams } from "react-router-dom";
 import cn from 'classnames';
 import { format } from 'date-fns';
 import { useRecords } from './records-store';
@@ -7,19 +8,21 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
-import { Table } from './ui/Table';
+import { Stringify } from './ui/Stringify';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from './ui/Card';
 
-interface Form {
-    date: string;
+interface ChemicalApplication {
     field: string;
     crop: string;
     acres: string;
-    applications: Array<{
-        chemical: string;
-        amount: string;
-    }>
+    chemical: string;
+    amount: string;
+}
+
+interface Form {
+    date: string;
+    chemicalApplications: ChemicalApplication[];
     note: string;
 }
 
@@ -30,19 +33,10 @@ const DEFAULT_FIELDS = {
 
 const isRows = (state: any): state is { rows: Rows<'chemical-application'>} => state && 'rows' in state;
 
-interface ChemicalApplication {
-    field: string;
-    crop: string;
-    acres: string;
-    chemical: string;
-    amount: string;
-}
-
 export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
-    const [isAdding, setIsAdding] = useState(false);
-    const [chemicalApplications, setChemicalApplications] = useState<any[]>([]);
     const { state } = useLocation();
+    const [params] = useSearchParams();
     const [fields, setFields] = useState<Rows<'field'>>({});
     const [crops, setCrops] = useState<Rows<'crop'>>({});
     const [chemicals, setChemicals] = useState<Rows<'chemical'>>({});
@@ -51,9 +45,9 @@ export const RecordEntry: React.VFC = () => {
     } = useRecords();
 
     const {
-        reset,
         register,
         handleSubmit,
+        control,
         formState: { isSubmitting, errors }
     } = useForm<Form>({
         defaultValues: {
@@ -73,7 +67,12 @@ export const RecordEntry: React.VFC = () => {
         }
     });
 
-    const onSubmit = handleSubmit(async ({ date, note }) => {
+    const { fields: chemicalApplications, prepend, remove } = useFieldArray({
+        control,
+        name: 'chemicalApplications',
+    });
+
+    const onSubmit = handleSubmit(async ({ date, chemicalApplications, note }) => {
         const application = await records.insert('application', {
             date,
             title: 'application', 
@@ -113,19 +112,16 @@ export const RecordEntry: React.VFC = () => {
         })();
     }, [records, setFields, setCrops]);
 
-    if (isAdding) {
+    if (params.get('chemical')) {
         return (
             <ChemicalApplicationForm
                 fields={fields}
                 crops={crops}
                 chemicals={chemicals}
-                onCancel={() => setIsAdding(false)}
+                onCancel={() => navigate(-1)}
                 onSubmit={(data) => {
-                    setChemicalApplications([
-                        ...data,
-                        ...chemicalApplications,
-                    ]);
-                    setIsAdding(false);
+                    prepend(data);
+                    navigate(-1);
                 }}
             />
         );
@@ -134,25 +130,7 @@ export const RecordEntry: React.VFC = () => {
     return (
         <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 grid-cols-2 md:grid-cols-4">
             <div className={cn('contents')}>
-                <div className="flex justify-between items-end col-span-full">
-                    <b>Application</b>
-                    <Button
-                        type="button"
-                        onClick={() => {
-                            if (window.confirm('Reset')) {
-                                reset(
-                                    {
-                                        ...DEFAULT_FIELDS,
-                                        acres: '',
-                                        field: '',
-                                        crop: '',
-                                    },
-                                );
-                            }
-                        }}>
-                        reset
-                    </Button>
-                </div>
+                <b>Application</b>
                 <FormEntry className="col-span-2" label="date">
                     <Input type="date" className="w-full" {...register('date', { required: 'Missing date' })} />
                 </FormEntry>
@@ -160,18 +138,26 @@ export const RecordEntry: React.VFC = () => {
             </div>
             <div className={cn('contents')}>
                 <Title>Chemical Applications</Title>
-                <Button onClick={() => setIsAdding(!isAdding)}>add</Button>
-                <Table className="col-span-full" columns={['field', 'crop', 'acres', 'chemical', 'amount']} data={chemicalApplications} />
-                <hr className="w-full col-span-full" />
-            </div>
+                <Button onClick={() => navigate({ search: new URLSearchParams({ chemical: '1' }).toString() })}>add</Button>
+                    
+                {chemicalApplications.map(({ id, ...fields }, index) => (
+                    <Card key={id} className="flex items-start gap-2 flex-col md:flex-row md:items-center col-span-full">
+                        <Stringify data={fields as any} />
+                        <div>
+                            <Button onClick={() => remove(index)}>remove</Button>
+                        </div>
+                            </Card>
+                            ))}
+                            <hr className="w-full col-span-full" />
+                                </div>
             <div
                 className={cn('contents', {
                 })}
             >
                 <Title>Note</Title>
-                <textarea className="col-span-full" {...register('note')} />
-                <hr className="w-full col-span-full" />
-            </div>
+                    <textarea className="col-span-full" {...register('note')} />
+                        <hr className="w-full col-span-full" />
+                            </div>
             <div className="col-span-full text-red-700">
                 {Object.entries(errors).map(([field, error]) => (
                     <div key={field}>{error.message}</div>
@@ -179,11 +165,16 @@ export const RecordEntry: React.VFC = () => {
             </div>
             <Button
                 onClick={onSubmit}
-                type="submit"
+                type="button"
                 loading={isSubmitting}
-                className="col-span-full md:w-36"
             >
-                complete
+                submit
+            </Button>
+            <Button
+                onClick={() => navigate(-1)}
+                type="button"
+            >
+                cancel 
             </Button>
         </form>
     )
@@ -314,14 +305,12 @@ export const ChemicalApplicationForm: React.VFC<Props> = ({
                     })));
                 })}
                 type="button"
-                className="col-span-full md:w-36"
             >
                 submit 
             </Button>
             <Button
                 onClick={onCancel}
                 type="button"
-                className="col-span-full md:w-36"
             >
                 cancel
             </Button>
