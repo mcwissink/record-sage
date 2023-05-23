@@ -129,8 +129,8 @@ export const RecordEntry: React.VFC = () => {
 
     return (
         <form onSubmit={(e) => e.preventDefault()} className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            <div className={cn('contents')}>
-                <b>Application</b>
+            <div className="contents">
+                <Title>Application</Title>
                 <FormEntry className="col-span-2" label="date">
                     <Input type="date" className="w-full" {...register('date', { required: 'Missing date' })} />
                 </FormEntry>
@@ -140,24 +140,29 @@ export const RecordEntry: React.VFC = () => {
                 <Title>Chemical Applications</Title>
                 <Button onClick={() => navigate({ search: new URLSearchParams({ chemical: '1' }).toString() })}>add</Button>
                     
-                {chemicalApplications.map(({ id, ...fields }, index) => (
+                {chemicalApplications.map(({ id, field, crop, acres, chemical, amount }, index) => (
                     <Card key={id} className="flex items-start gap-2 flex-col md:flex-row md:items-center col-span-full">
-                        <Stringify data={fields as any} />
+                        <Stringify data={{
+                            field: fields[field].name,
+                            crop: crops[crop].name,
+                            acres,
+                            chemical: chemicals[chemical].name,
+                            registration: chemicals[chemical].registration,
+                            amount,
+                            unit: chemicals[chemical].unit,
+                        }} />
                         <div>
                             <Button onClick={() => remove(index)}>remove</Button>
                         </div>
-                            </Card>
-                            ))}
-                            <hr className="w-full col-span-full" />
-                                </div>
-            <div
-                className={cn('contents', {
-                })}
-            >
+                    </Card>
+                 ))}
+                 <hr className="w-full col-span-full" />
+            </div>
+            <div className="contents">
                 <Title>Note</Title>
-                    <textarea className="col-span-full" {...register('note')} />
-                        <hr className="w-full col-span-full" />
-                            </div>
+                <textarea className="col-span-full" {...register('note')} />
+                <hr className="w-full col-span-full" />
+            </div>
             <div className="col-span-full text-red-700">
                 {Object.entries(errors).map(([field, error]) => (
                     <div key={field}>{error.message}</div>
