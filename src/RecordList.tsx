@@ -28,9 +28,9 @@ export const RecordList: React.VFC = () => {
         loading(records.query)('application', `SELECT * ORDER BY B DESC LIMIT ${limit} OFFSET ${offset}`).then(setData);
     }, [records, params, limit, offset, loading]);
 
-    const onDuplicateRows = (rows: Rows<'application'>) => () => {
-        navigate('records/add', { state: { rows } });
-    };
+    // const onDuplicateRows = (rows: Rows<'application'>) => () => {
+    //     navigate('records/add', { state: { rows } });
+    // };
 
     const rowsByDate = Object.entries(data.rows).reduce<Record<string, Rows<'application'>>>((acc, [id, row]) => {
         if (acc[row.date]) {
@@ -52,7 +52,6 @@ export const RecordList: React.VFC = () => {
                     <React.Fragment key={date}>
                         <div className="flex items-end">
                             <b className="grow">{date}</b>
-                            <Button onClick={onDuplicateRows(rows)}>duplicate</Button>
                         </div>
                         {Object.entries(rows).map(([id, row]) => (
                             <Link key={id} to={`/records/${id}`} className="no-underline">

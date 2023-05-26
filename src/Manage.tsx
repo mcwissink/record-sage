@@ -49,9 +49,8 @@ export const Manage: React.VFC = () => {
         control,
         name: 'columns',
     });
-    const {
-        records,
-    } = useRecords();
+
+    const { records } = useRecords();
 
     const resetForm = useCallback(() => reset({
         columns: schema[table].columns.slice(OFFSET).map(() => ({ value: '' })),
@@ -106,45 +105,49 @@ export const Manage: React.VFC = () => {
                 </Select>
             </div>
             <Progress active={isSyncing || isLoading} />
-            <form className="w-max md:w-full max-w-full" onSubmit={handleSubmit(onSubmit)}>
-                <table className="grid gap-4" style={{ gridTemplateColumns: `repeat(${schema[table].columns.length + 1}, minmax(0, max-content))` }}>
-                    <thead className="contents">
-                        <tr className="contents">
-                            {schema[table].columns.map((column) =>
-                                <td key={column}><b>{column}</b></td>
-                            )}
-                            <td><b>actions</b></td>
-                        </tr>
-                    </thead>
-                    <tbody className="contents">
-                        {data.rows.map((row) => (
-                            <tr key={row[0]} className="contents">
-                                {row.map((cell, index) =>
-                                    <td key={index} className="truncate">{index ? cell : cell.slice(0, 8)}</td>
-                                )}
-                                <td>
-                                    <Button type="button" onClick={onDelete(row)}>delete</Button>
-                                </td>
-                            </tr>
-                        ))}
-                        <tr className="contents">
-                            <td><i>ID</i></td>
-                            <td><i>DATE</i></td>
-                            {fields.map((field, index) => (
-                                <td key={field.id}>
-                                    <input className="w-full" {...register(`columns.${index}.value`)} />
-                                </td>
-                            ))}
-                            <td><Button loading={isSubmitting}>submit</Button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </form>
-            <Pagination
-                offset={data.offset}
-                total={data.total}
-                limit={data.limit}
-            />
+            {!isLoading && (
+                <>
+                    <form className="w-max md:w-full max-w-full" onSubmit={handleSubmit(onSubmit)}>
+                        <table className="grid gap-4" style={{ gridTemplateColumns: `repeat(${schema[table].columns.length + 1}, minmax(0, max-content))` }}>
+                            <thead className="contents">
+                                <tr className="contents">
+                                    {schema[table].columns.map((column) =>
+                                        <td key={column}><b>{column}</b></td>
+                                    )}
+                                    <td><b>actions</b></td>
+                                </tr>
+                            </thead>
+                            <tbody className="contents">
+                                {data.rows.map((row) => (
+                                    <tr key={row[0]} className="contents">
+                                        {row.map((cell, index) =>
+                                            <td key={index} className="truncate">{index ? cell : cell.slice(0, 8)}</td>
+                                        )}
+                                        <td>
+                                            <Button type="button" onClick={onDelete(row)}>delete</Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                <tr className="contents">
+                                    <td><i>ID</i></td>
+                                    <td><i>DATE</i></td>
+                                    {fields.map((field, index) => (
+                                        <td key={field.id}>
+                                            <input className="w-full" {...register(`columns.${index}.value`)} />
+                                        </td>
+                                    ))}
+                                    <td><Button loading={isSubmitting}>submit</Button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </form>
+                    <Pagination
+                        offset={data.offset}
+                        total={data.total}
+                        limit={data.limit}
+                    />
+                </>
+            )}
         </div >
     );
 }

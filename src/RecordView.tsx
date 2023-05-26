@@ -41,6 +41,9 @@ export const RecordView: React.VFC = () => {
     const onDelete = (row: Row<'application'>) => async () => {
         if (window.confirm(`Delete: ${JSON.stringify(row._id)}`)) {
             await records.delete('application', row._id);
+            for (const chemicalApplication of Object.values(chemicalApplications)) {
+                await records.delete('chemical-application', chemicalApplication._id);
+            }
             navigate(-1);
         }
     };

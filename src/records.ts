@@ -110,10 +110,7 @@ export class Records {
             ...row,
         } as Row<T>
         await this.cache.insert(table, rowWithId);
-        const response = online(this.sync)();
-        if (!this.schema[table].cache) {
-            await response;
-        }
+        await online(this.sync)();
         return rowWithId;
     });
 
@@ -141,7 +138,7 @@ export class Records {
 
     delete = log('records:delete', async <T extends keyof Schema>(table: T, id: string) => {
         await this.cache.delete(table, id);
-        online(this.sync)();
+        await online(this.sync)();
     });
 
     private syncTable = async <T extends keyof Schema>(table: T) => {
