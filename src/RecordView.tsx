@@ -21,7 +21,7 @@ export const RecordView: React.VFC = () => {
         if (recordId) {
             loading(async () => {
                 setApplication((await records.query('application', `SELECT * WHERE A = '${recordId}'`)).rows[recordId]);
-                setChemicalApplications((await records.query('chemical-application', `SELECT * WHERE B = '${recordId}'`)).rows);
+                setChemicalApplications((await records.query('chemical-application', `SELECT * WHERE C = '${recordId}'`)).rows);
             })();
         }
     }, [records, recordId, loading]);
@@ -45,8 +45,6 @@ export const RecordView: React.VFC = () => {
         }
     };
 
-    console.log(chemicalApplications);
-
     return (
         <div className="grid gap-2">
             <div className="flex items-end">
@@ -54,7 +52,6 @@ export const RecordView: React.VFC = () => {
                 <Button type="button" onClick={onDelete(application)}>delete</Button>
             </div>
             <div className="flex flex-col gap-1">
-                <Label label="applicator">{application._id}</Label>
                 <Label label="applicator">{application.applicator}</Label>
                 <Label label="certification">{application.certification}</Label>
                 <Label label="note">{application.note}</Label>

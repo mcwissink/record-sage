@@ -22,12 +22,15 @@ interface ChemicalApplication {
 
 interface Form {
     date: string;
+    title: string;
+    applicator: string;
     chemicalApplications: ChemicalApplication[];
     note: string;
 }
 
 const DEFAULT_FIELDS = {
     date: format(new Date(), 'yyyy-MM-dd'),
+    title: 'Application',
     applications: [{}],
 }
 
@@ -40,6 +43,7 @@ export const RecordEntry: React.VFC = () => {
     const [fields, setFields] = useState<Rows<'field'>>({});
     const [crops, setCrops] = useState<Rows<'crop'>>({});
     const [chemicals, setChemicals] = useState<Rows<'chemical'>>({});
+    const [applicators, setApplicators] = useState<Rows<'applicator'>>({});
     const {
         records,
     } = useRecords();
@@ -72,12 +76,12 @@ export const RecordEntry: React.VFC = () => {
         name: 'chemicalApplications',
     });
 
-    const onSubmit = handleSubmit(async ({ date, chemicalApplications, note }) => {
+    const onSubmit = handleSubmit(async ({ date, title, applicator, chemicalApplications, note }) => {
         const application = await records.insert('application', {
-            title: 'application', 
+            title, 
             date,
-            applicator: 'applicator',
-            certification: 'certification',
+            applicator: applicators[applicator].name,
+            certification: applicators[applicator].certification,
             note,
         });
         for (const { chemical, amount, field, crop, acres } of chemicalApplications) {
@@ -101,14 +105,17 @@ export const RecordEntry: React.VFC = () => {
                 fields,
                 crops,
                 chemicals,
+                applicators
             ] = await Promise.all([
                 records.get('field'),
                 records.get('crop'),
                 records.get('chemical'),
+                records.get('applicator'),
             ]);
             setFields(fields.rows);
             setCrops(crops.rows);
             setChemicals(chemicals.rows);
+            setApplicators(applicators.rows);
         })();
     }, [records, setFields, setCrops]);
 
@@ -133,6 +140,19 @@ export const RecordEntry: React.VFC = () => {
                 <Title>Application</Title>
                 <FormEntry className="col-span-2" label="date">
                     <Input type="date" className="w-full" {...register('date', { required: 'Missing date' })} />
+                </FormEntry>
+                <FormEntry className="col-span-2" label="title">
+                    <Input type="text" className="w-full" {...register('title')} />
+                </FormEntry>
+                <FormEntry className="col-span-2" label="applicator">
+                    <Select defaultValue="" className="w-full" {...register('applicator', { required: 'Missing applicator' })}>
+                        <option disabled value="">
+                            Select an applicator 
+                        </option>
+                        {Object.entries(applicators).map(([id, field]) => (
+                            <option key={id} value={id}>{field.name}</option>
+                        ))}
+                    </Select>
                 </FormEntry>
                 <hr className="w-full col-span-full" />
             </div>

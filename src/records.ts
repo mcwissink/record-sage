@@ -158,10 +158,10 @@ export class Records {
             try {
                 switch (entry.action) {
                     case JournalAction.Insert:
-                        await log(`sync:inserting:${entry.id}`, this.provider.insert)(entry.table, entry.payload as Row<typeof entry.table>);
+                        await log(`sync:inserting:${entry._id}`, this.provider.insert)(entry.table, entry.payload as Row<typeof entry.table>);
                         break;
                     case JournalAction.Delete:
-                        await log(`sync:deleting:${entry.id}`, this.provider.delete)(entry.table, entry.payload);
+                        await log(`sync:deleting:${entry._id}`, this.provider.delete)(entry.table, entry.payload);
                         break;
                 }
                 return true;

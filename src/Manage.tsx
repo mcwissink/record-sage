@@ -19,6 +19,8 @@ interface Form {
 
 const flatten = <T extends keyof Schema>(rows: Rows<T>): string[][] => Object.values(rows).map(Object.values);
 
+const OFFSET = 2;
+
 export const Manage: React.VFC = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
@@ -52,7 +54,7 @@ export const Manage: React.VFC = () => {
     } = useRecords();
 
     const resetForm = useCallback(() => reset({
-        columns: schema[table].columns.slice(1).map(() => ({ value: '' })),
+        columns: schema[table].columns.slice(OFFSET).map(() => ({ value: '' })),
     }), [table, reset]);
 
     useEffect(() => {
@@ -78,7 +80,7 @@ export const Manage: React.VFC = () => {
 
     const onSubmit = async (form: Form) => {
         await records.insert(table, form.columns.reduce<Record<string, string>>((acc, column, index) => {
-            acc[schema[table].columns[index + 1]] = column.value;
+            acc[schema[table].columns[index + OFFSET]] = column.value;
             return acc;
         }, {}) as Row<typeof table>);
         records.get(table, parameters).then(setData);
@@ -86,7 +88,7 @@ export const Manage: React.VFC = () => {
     };
 
     const onDelete = (row: string[]) => async () => {
-        if (window.confirm(`Delete: ${JSON.stringify(row.slice(1))}`)) {
+        if (window.confirm(`Delete: ${JSON.stringify(row.slice(OFFSET))}`)) {
             await records.delete(table, row[0]);
             records.get(table, parameters).then(setData);
         }
@@ -127,6 +129,7 @@ export const Manage: React.VFC = () => {
                         ))}
                         <tr className="contents">
                             <td><i>ID</i></td>
+                            <td><i>DATE</i></td>
                             {fields.map((field, index) => (
                                 <td key={field.id}>
                                     <input className="w-full" {...register(`columns.${index}.value`)} />

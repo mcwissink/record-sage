@@ -10,7 +10,7 @@ export enum JournalAction {
 interface JournalPayload<Action extends JournalAction, Payload> {
     action: Action;
     payload: Payload;
-    id: string;
+    _id: string;
     table: keyof Schema;
 }
 
@@ -112,14 +112,14 @@ class Journal {
 
     get = (): Promise<JournalEntry[]> => this.db.get(Journal.ENTRY);
 
-    insert = (entry: Omit<JournalEntry, 'id'>) => this.db.insert(Journal.ENTRY, entry);
+    insert = (entry: Omit<JournalEntry, '_id'>) => this.db.insert(Journal.ENTRY, entry);
 
     delete = (id: string | number) => this.db.delete(Journal.ENTRY, id);
 
     connect = log('journal:connect', async () => {
         await this.db.connect((db) => {
             db.createObjectStore(Journal.ENTRY, {
-                keyPath: 'id',
+                keyPath: '_id',
                 autoIncrement: true,
             })
         });
@@ -155,7 +155,7 @@ export class Cache {
         this.schema = schema;
         await this.db.connect(async (db) => {
             Object.keys(schema).forEach((table) => {
-                db.createObjectStore(table, { keyPath: 'id' });
+                db.createObjectStore(table, { keyPath: '_id' });
             });
         });
         await this.journal.connect();
@@ -201,7 +201,7 @@ export class Cache {
             for (const entry of entries) {
                 if (await cb(entry)) {
                     updates.add(entry.table);
-                    await this.journal.delete(entry.id);
+                    await this.journal.delete(entry._id);
                 }
             }
             this.syncing = false;
