@@ -325,7 +325,7 @@ export class SheetsProvider extends RecordsProvider {
 
     convertToRows = <T extends keyof Schema>(table: T, rows: string[][]) => rows.reduce<Rows<T>>((acc, r) => {
         const row = this.convertToRow(table, r);
-        acc[row.id] = row;
+        acc[row._id] = row;
         return acc;
     }, {});
 

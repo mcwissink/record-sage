@@ -74,15 +74,15 @@ export const RecordEntry: React.VFC = () => {
 
     const onSubmit = handleSubmit(async ({ date, chemicalApplications, note }) => {
         const application = await records.insert('application', {
-            date,
             title: 'application', 
+            date,
             applicator: 'applicator',
             certification: 'certification',
             note,
         });
         for (const { chemical, amount, field, crop, acres } of chemicalApplications) {
             await records.insert('chemical-application', {
-                application: application.id,
+                _application: application._id,
                 field: fields[field].name,
                 crop: crops[crop].name,
                 acres,

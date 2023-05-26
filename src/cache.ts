@@ -70,7 +70,7 @@ class Database {
             .getAll()
     ));
 
-    find = log('db:find', async (table: string, id: string,): Promise<Record<string, any>> => this.resolve(
+    find = log('db:find', async (table: string, id: string): Promise<Record<string, any>> => this.resolve(
         this.db
             .transaction(table, 'readonly')
             .objectStore(table)
@@ -218,7 +218,7 @@ export class Cache {
     reset = async <T extends keyof Schema>(table: T, rows: Rows<T>) => this.db.reset(table, Object.values(rows));
 
     private convertToRows = <T extends keyof Schema>(rows: Array<Record<string, string>>) => rows.reduce<Rows<T>>((acc, row) => {
-        acc[row.id] = row as Row<T>;
+        acc[row._id] = row as Row<T>;
         return acc;
     }, {});
 }

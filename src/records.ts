@@ -28,7 +28,7 @@ export type PartialRow<T extends keyof Schema> = {
     [C in Schema[T]['columns'][number]]: string;
 }
 
-export type Row<T extends keyof Schema> = PartialRow<T> & { id: string };
+export type Row<T extends keyof Schema> = PartialRow<T> & { _id: string };
 
 export type Rows<T extends keyof Schema> = Record<string, Row<T>>;
 
@@ -103,9 +103,10 @@ export class Records {
         return await this.provider.logout();
     });
 
-    insert = log('records:insert', async <T extends keyof Schema>(table: T, row: Omit<Row<T>, 'id'>) => {
+    insert = log('records:insert', async <T extends keyof Schema>(table: T, row: Omit<Row<T>, '_id' | '_created'>) => {
         const rowWithId = {
-            id: this.generateId(),
+            _id: this.generateId(),
+            _created: new Date().toISOString(),
             ...row,
         } as Row<T>
         await this.cache.insert(table, rowWithId);
