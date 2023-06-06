@@ -37,7 +37,7 @@ export class Records {
     public Setup: React.VFC;
     public Login: React.VFC;
     private provider: RecordsProvider;
-    private cache: Cache;
+    public cache: Cache;
     private _schema?: Schema;
     constructor(
         { RecordsProvider, Login, Setup }: Provider,
@@ -142,11 +142,12 @@ export class Records {
     });
 
     private syncTable = async <T extends keyof Schema>(table: T) => {
-        const { rows } = await this.provider.get(
-            table,
-            this.schema[table].cache ? null : { limit: 5, offset: 0 }
-        );
-        await this.cache.reset(table, rows);
+        if (this.schema[table].cache) {
+            const { rows } = await this.provider.get(table);
+            await this.cache.reset(table, rows);
+        } else {
+            await this.cache.reset(table, {});
+        }
     }
 
     sync = log('records:sync', async () => {

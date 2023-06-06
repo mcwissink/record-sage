@@ -24,7 +24,7 @@ const OFFSET = 2;
 export const Manage: React.VFC = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
-    const table: keyof Schema = params.get('table') as keyof Schema ?? 'chemical-application';
+    const table: keyof Schema = params.get('table') as keyof Schema ?? 'application';
     const [data, setDataWrapped] = useState<Paginated<string[][]>>({
         rows: [],
         total: 0,
@@ -96,9 +96,13 @@ export const Manage: React.VFC = () => {
     return (
         <div className="flex flex-col gap-4">
             <div className="w-full">
-                <Select defaultValue={'empty'} className="w-full md:w-auto" onChange={e => {
-                    navigate({ search: new URLSearchParams({ table: e.target.value }).toString() })
-                }}>
+                <Select
+                    className="w-full md:w-auto"
+                    value={table}
+                    onChange={e => {
+                        navigate({ search: new URLSearchParams({ table: e.target.value }).toString() })
+                    }}
+                >
                     {Object.keys(schema).map((table) => (
                         <option key={table} value={table}>{table}</option>
                     ))}

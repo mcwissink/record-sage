@@ -8,13 +8,17 @@ import { Pagination } from './ui/Pagination';
 import { Progress } from "./ui/Progress";
 import { Stringify } from "./ui/Stringify";
 import { useLoading } from "./use-loading";
-import { useNavigate } from "react-router-dom";
 
 export const RecordList: React.VFC = () => {
-    const navigate = useNavigate();
     const [params] = useSearchParams();
     const { isLoading, loading } = useLoading();
-    const [data, setData] = useState<Paginated<Rows<'application'>>>({
+    const [applications, setApplications] = useState<Paginated<Rows<'application'>>>({
+        rows: {},
+        total: 0,
+        limit: 0,
+        offset: 0,
+    });
+    const [pendingApplications, setPendingApplications] = useState<Paginated<Rows<'application'>>>({
         rows: {},
         total: 0,
         limit: 0,
@@ -25,14 +29,15 @@ export const RecordList: React.VFC = () => {
     const offset = Number(params.get('offset') ?? 0);
 
     useEffect(() => {
-        loading(records.query)('application', `SELECT * ORDER BY B DESC LIMIT ${limit} OFFSET ${offset}`).then(setData);
+        loading(records.query)('application', `SELECT * ORDER BY B DESC LIMIT ${limit} OFFSET ${offset}`).then(setApplications);
+        records.cache.get('application').then(setPendingApplications);
     }, [records, params, limit, offset, loading]);
 
     // const onDuplicateRows = (rows: Rows<'application'>) => () => {
     //     navigate('records/add', { state: { rows } });
     // };
 
-    const rowsByDate = Object.entries(data.rows).reduce<Record<string, Rows<'application'>>>((acc, [id, row]) => {
+    const rowsByDate = Object.entries(applications.rows).reduce<Record<string, Rows<'application'>>>((acc, [id, row]) => {
         if (acc[row.date]) {
             acc[row.date][id] = row;
         } else {
@@ -42,11 +47,24 @@ export const RecordList: React.VFC = () => {
     }, {});
 
     return (
-        <div>
+        <div className="flex flex-col gap-4">
             <Link to="/records/add">
-                <Button className="mb-4 mt-2 w-full md:w-36">Add</Button>
+                <Button className="w-full md:w-36">add</Button>
             </Link>
             <Progress active={isLoading} />
+            {!!pendingApplications.total && (
+                <>
+                    <div className="flex flex-col gap-4">
+                        <b>pending</b>
+                        {Object.entries(pendingApplications.rows).map(([id, row]) => (
+                            <Card key={id} className="flex items-center opacity-75">
+                                <Stringify data={row} />
+                            </Card>
+                        ))}
+                    </div>
+                    {!!applications.total && <hr className="w-full col-span-full" />}
+                </>
+            )}
             <div className="flex flex-col gap-4">
                 {Object.entries(rowsByDate).map(([date, rows]) => (
                     <React.Fragment key={date}>
@@ -64,7 +82,7 @@ export const RecordList: React.VFC = () => {
                 ))}
                 <Pagination
                     offset={offset}
-                    total={data.total}
+                    total={applications.total}
                     limit={limit}
                 />
             </div>
