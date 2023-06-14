@@ -1,13 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Rows, Row } from './records';
-import { useRecords } from './records-store';
+import { useGet, useRecords } from './records-store';
 import { schema, Schema } from './schema';
-import { useLoading } from './use-loading';
 import { Button } from './ui/Button';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Progress } from './ui/Progress';
 import { Select } from './ui/Select';
-import { Paginated } from './records';
 import { Pagination } from './ui/Pagination';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -19,77 +17,53 @@ interface Form {
 
 const flatten = <T extends keyof Schema>(rows: Rows<T>): string[][] => Object.values(rows).map(Object.values);
 
+const getColumnsFromTable = (table: keyof Schema) => ({
+    columns: schema[table].columns.slice(OFFSET).map(() => ({ value: '' })),
+});
+
 const OFFSET = 2;
 
 export const Manage: React.VFC = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
     const table: keyof Schema = params.get('table') as keyof Schema ?? 'application';
-    const [data, setDataWrapped] = useState<Paginated<string[][]>>({
-        rows: [],
-        total: 0,
-        limit: 0,
-        offset: 0,
-    });
 
-    const setData = <T extends keyof Schema>(data: Paginated<Rows<T>>) => setDataWrapped({
-        ...data,
-        rows: flatten(data.rows),
-    });
-
-    const parameters = {
+    const { data, mutate, isLoading } = useGet(table, {
         limit: Number(params.get('limit') ?? 5),
         offset: Number(params.get('offset') ?? 0),
-    }
+    });
 
-    const [isSyncing, setIsSyncing] = useState(false);
-    const { isLoading, loading } = useLoading();
-    const { register, control, handleSubmit, reset, formState: { isSubmitting } } = useForm<Form>();
+    const {
+        register,
+        control,
+        handleSubmit,
+        reset,
+        formState: { isSubmitting }
+    } = useForm<Form>({
+        defaultValues: getColumnsFromTable(table),
+    });
     const { fields } = useFieldArray<Form>({
         control,
         name: 'columns',
     });
 
-    const { records } = useRecords();
+    const { records, isSyncing } = useRecords();
 
-    const resetForm = useCallback(() => reset({
-        columns: schema[table].columns.slice(OFFSET).map(() => ({ value: '' })),
-    }), [table, reset]);
-
-    useEffect(() => {
-        if (table) {
-            loading(records.get)(table, parameters).then(setData);
-            resetForm();
-        }
-    }, [records, table, loading, resetForm, params]);
-
-    useEffect(() => {
-        const onSyncing = () => setIsSyncing(true);
-        const onSynced = () => {
-            setIsSyncing(false);
-            records.get(table).then(setData);
-        };
-        window.addEventListener('records:syncing', onSyncing);
-        window.addEventListener('records:synced', onSynced);
-        return () => {
-            window.removeEventListener('records:syncing', onSyncing);
-            window.removeEventListener('records:synced', onSynced);
-        }
-    }, [records, table, setData, setIsSyncing]);
+    useEffect(() => reset(getColumnsFromTable(table)), [table]);
 
     const onSubmit = async (form: Form) => {
         await records.insert(table, form.columns.reduce<Record<string, string>>((acc, column, index) => {
             acc[schema[table].columns[index + OFFSET]] = column.value;
             return acc;
         }, {}) as Row<typeof table>);
-        records.get(table, parameters).then(setData);
-        resetForm();
+        mutate();
+        reset(getColumnsFromTable(table));
     };
 
     const onDelete = (row: string[]) => async () => {
         if (window.confirm(`Delete: ${JSON.stringify(row.slice(OFFSET))}`)) {
             await records.delete(table, row[0]);
-            records.get(table, parameters).then(setData);
+            mutate();
         }
     };
 
@@ -122,7 +96,7 @@ export const Manage: React.VFC = () => {
                                 </tr>
                             </thead>
                             <tbody className="contents">
-                                {data.rows.map((row) => (
+                                {flatten(data?.rows ?? {}).map((row) => (
                                     <tr key={row[0]} className="contents">
                                         {row.map((cell, index) =>
                                             <td key={index} className="truncate">{index ? cell : cell.slice(0, 8)}</td>
@@ -145,11 +119,13 @@ export const Manage: React.VFC = () => {
                             </tbody>
                         </table>
                     </form>
-                    <Pagination
-                        offset={data.offset}
-                        total={data.total}
-                        limit={data.limit}
-                    />
+                    {!!data && (
+                        <Pagination
+                            offset={data.offset}
+                            total={data.total}
+                            limit={data.limit}
+                        />
+                    )}
                 </>
             )}
         </div >

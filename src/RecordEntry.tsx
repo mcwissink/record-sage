@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useSearchParams } from "react-router-dom";
 import cn from 'classnames';
 import { format } from 'date-fns';
-import { useRecords } from './records-store';
+import { useGet, useRecords } from './records-store';
 import { Rows } from './records';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { Button } from './ui/Button';
@@ -40,10 +40,11 @@ export const RecordEntry: React.VFC = () => {
     const navigate = useNavigate();
     const { state } = useLocation();
     const [params] = useSearchParams();
-    const [fields, setFields] = useState<Rows<'field'>>({});
-    const [crops, setCrops] = useState<Rows<'crop'>>({});
-    const [chemicals, setChemicals] = useState<Rows<'chemical'>>({});
-    const [applicators, setApplicators] = useState<Rows<'applicator'>>({});
+    const { data: fields } = useGet('field');
+    const { data: crops } = useGet('crop');
+    const { data: chemicals } = useGet('chemical');
+    const { data: applicators } = useGet('applicator');
+    console.log(applicators);
     const {
         records,
     } = useRecords();
@@ -76,55 +77,39 @@ export const RecordEntry: React.VFC = () => {
         name: 'chemicalApplications',
     });
 
+    if (!fields || !crops || !chemicals || !applicators) {
+        return null;
+    }
+
     const onSubmit = handleSubmit(async ({ date, title, applicator, chemicalApplications, note }) => {
         const application = await records.insert('application', {
             title, 
             date,
-            applicator: applicators[applicator].name,
-            certification: applicators[applicator].certification,
+            applicator: applicators.rows[applicator].name,
+            certification: applicators.rows[applicator].certification,
             note,
         });
         for (const { chemical, amount, field, crop, acres } of chemicalApplications) {
             await records.insert('chemical-application', {
                 _application: application._id,
-                field: fields[field].name,
-                crop: crops[crop].name,
+                field: fields.rows[field].name,
+                crop: crops.rows[crop].name,
                 acres,
-                chemical: chemicals[chemical].name,
-                registration: chemicals[chemical].registration,
+                chemical: chemicals.rows[chemical].name,
+                registration: chemicals.rows[chemical].registration,
                 amount,
-                unit: chemicals[chemical].unit,
+                unit: chemicals.rows[chemical].unit,
             });
         }
         navigate('/');
     });
 
-    useEffect(() => {
-        (async () => {
-            const [
-                fields,
-                crops,
-                chemicals,
-                applicators
-            ] = await Promise.all([
-                records.get('field'),
-                records.get('crop'),
-                records.get('chemical'),
-                records.get('applicator'),
-            ]);
-            setFields(fields.rows);
-            setCrops(crops.rows);
-            setChemicals(chemicals.rows);
-            setApplicators(applicators.rows);
-        })();
-    }, [records, setFields, setCrops]);
-
     if (params.get('chemical')) {
         return (
             <ChemicalApplicationForm
-                fields={fields}
-                crops={crops}
-                chemicals={chemicals}
+                fields={fields.rows}
+                crops={crops.rows}
+                chemicals={chemicals.rows}
                 onCancel={() => navigate(-1)}
                 onSubmit={(data) => {
                     prepend(data);
@@ -149,8 +134,8 @@ export const RecordEntry: React.VFC = () => {
                         <option disabled value="">
                             Select an applicator 
                         </option>
-                        {Object.entries(applicators).map(([id, field]) => (
-                            <option key={id} value={id}>{field.name}</option>
+                        {Object.entries(applicators.rows).map(([id, applicator]) => (
+                            <option key={id} value={id}>{applicator.name}</option>
                         ))}
                     </Select>
                 </FormEntry>
@@ -163,13 +148,13 @@ export const RecordEntry: React.VFC = () => {
                 {chemicalApplications.map(({ id, field, crop, acres, chemical, amount }, index) => (
                     <Card key={id} className="flex items-start gap-2 flex-col md:flex-row md:items-center col-span-full">
                         <Stringify data={{
-                            field: fields[field].name,
-                            crop: crops[crop].name,
+                            field: fields.rows[field].name,
+                            crop: crops.rows[crop].name,
                             acres,
-                            chemical: chemicals[chemical].name,
-                            registration: chemicals[chemical].registration,
+                            chemical: chemicals.rows[chemical].name,
+                            registration: chemicals.rows[chemical].registration,
                             amount,
-                            unit: chemicals[chemical].unit,
+                            unit: chemicals.rows[chemical].unit,
                         }} />
                         <div>
                             <Button onClick={() => remove(index)}>remove</Button>

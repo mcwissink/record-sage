@@ -1,36 +1,38 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { useParams } from "react-router-dom";
-import { useRecords } from "./records-store";
-import { Row, Rows } from "./records";
+import { useQuery, useRecords } from "./records-store";
+import { Row } from "./records";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/Button";
-import { useLoading } from "./use-loading";
 import { Progress } from "./ui/Progress";
 import { Card } from "./ui/Card";
 import { Stringify } from "./ui/Stringify";
 
 
+export const ApplicationsView = () => {
+};
+
 export const RecordView: React.VFC = () => {
     const navigate = useNavigate();
-    const { isLoading, loading } = useLoading();
     const { recordId } = useParams();
-    const [application, setApplication] = useState<Row<'application'> | undefined>();
-    const [chemicalApplications, setChemicalApplications] = useState<Rows<'chemical-application'> | undefined>();
     const { records } = useRecords();
-    useEffect(() => {
-        if (recordId) {
-            loading(async () => {
-                setApplication((await records.query('application', `SELECT * WHERE A = '${recordId}'`)).rows[recordId]);
-                setChemicalApplications((await records.query('chemical-application', `SELECT * WHERE C = '${recordId}'`)).rows);
-            })();
-        }
-    }, [records, recordId, loading]);
+
+    const {
+        data: applications,
+        isLoading: isLoadingApplications
+    } = useQuery('application', `SELECT * WHERE A = '${recordId}'`);
+    const {
+        data: chemicalApplications,
+        isLoading: isLoadingChemicalApplications
+    } = useQuery('chemical-application', `SELECT * WHERE C = '${recordId}'`);
 
     if (!recordId) {
         return <div>Missing ID</div>
     }
 
-    if (isLoading) {
+    const application = applications?.rows[recordId];
+
+    if (isLoadingApplications || isLoadingChemicalApplications) {
         return <Progress />
     }
 
@@ -41,7 +43,7 @@ export const RecordView: React.VFC = () => {
     const onDelete = (row: Row<'application'>) => async () => {
         if (window.confirm(`Delete: ${JSON.stringify(row._id)}`)) {
             await records.delete('application', row._id);
-            for (const chemicalApplication of Object.values(chemicalApplications)) {
+            for (const chemicalApplication of Object.values(chemicalApplications.rows)) {
                 await records.delete('chemical-application', chemicalApplication._id);
             }
             navigate(-1);
@@ -60,9 +62,9 @@ export const RecordView: React.VFC = () => {
                 <Label label="note">{application.note}</Label>
             </div>
             <hr />
-            {Object.entries(chemicalApplications).map(([id, { _application, ...chemicalApplication }]) => (
+            {Object.entries(chemicalApplications.rows).map(([id, chemicalApplication]) => (
                 <Card key={id} className="flex items-start gap-2 flex-col md:flex-row md:items-center col-span-full">
-                    <Stringify data={chemicalApplication as any} />
+                    <Stringify data={chemicalApplication} />
                 </Card>
             ))}
         </div>
